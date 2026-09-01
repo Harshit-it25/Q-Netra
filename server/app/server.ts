@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
+import fs from 'fs';
 import { SERVER_CONFIG } from './config';
 import { corsMiddleware } from '../middleware/cors';
 import { securityHeadersMiddleware } from '../middleware/securityHeaders';
@@ -31,22 +31,44 @@ export function createApp() {
 export async function startServer() {
   const app = createApp();
 
-  if (!SERVER_CONFIG.isProduction) {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa'
-    });
-    app.use(vite.middlewares);
+  // Robustly resolve production dist directory across local and containerized runtimes
+  let distDir = path.join(process.cwd(), 'dist');
+  if (!fs.existsSync(path.join(distDir, 'index.html')) && typeof __dirname !== 'undefined') {
+    if (fs.existsSync(path.join(__dirname, 'index.html'))) {
+      distDir = __dirname;
+    } else if (fs.existsSync(path.join(__dirname, '..', 'dist', 'index.html'))) {
+      distDir = path.join(__dirname, '..', 'dist');
+    }
+  }
+
+  const isDistAvailable = fs.existsSync(path.join(distDir, 'index.html'));
+
+  if (!isDistAvailable && process.env.NODE_ENV !== 'production') {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa'
+      });
+      app.use(vite.middlewares);
+      console.log('Q-NETRA AI running with dynamic Vite development middleware');
+    } catch (err) {
+      console.warn('Vite dev middleware unavailable, serving static dist fallback');
+    }
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    console.log(`Q-NETRA AI serving production build from: ${distDir}`);
+    app.use(express.static(distDir));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(path.join(distDir, 'index.html'));
     });
   }
 
-  const server = app.listen(SERVER_CONFIG.port, '0.0.0.0', () => {
-    console.log(`Q-NETRA AI Server running on http://localhost:${SERVER_CONFIG.port}`);
+  const port = Number(process.env.PORT) || SERVER_CONFIG.port || 3000;
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`Q-NETRA AI Server listening on 0.0.0.0:${port} (NODE_ENV=${process.env.NODE_ENV || 'production'})`);
   });
 
   return server;
