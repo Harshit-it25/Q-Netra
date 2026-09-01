@@ -312,6 +312,11 @@ Explore the deep technical validation documents in the [`docs/`](docs/) director
 - 🎙️ **[BHASHINI Live Validation](docs/BHASHINI_LIVE_VALIDATION.md)** — Speech-to-Text and Text-to-Speech live test matrix.
 - ⚖️ **[Claims Audit](docs/CLAIMS_AUDIT.md)** — Strict claims audit and forbidden claims blacklist.
 
+### 📑 Microsoft Word (.docx) Reports (`docx/`):
+- 📘 **[Q-NETRA Final Validation Report](docx/Q_NETRA_FINAL_VALIDATION_REPORT.docx)** — Complete system audit and benchmark report in `.docx` format.
+- 📘 **[Q-NETRA Architecture & Design](docx/Q_NETRA_SYSTEM_ARCHITECTURE_AND_DESIGN.docx)** — Full 3-pillar forensic engine specification in `.docx` format.
+- 📘 **[Q-NETRA Executive Summary](docx/Q_NETRA_EXECUTIVE_PROJECT_SUMMARY.docx)** — High-level overview and problem statement in `.docx` format.
+
 ---
 
 ## 📄 License
