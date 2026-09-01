@@ -21,11 +21,51 @@ import {
 } from './lib/paymentHistory';
 import { LanguageProvider } from './services/i18n/LanguageContext';
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('Q-NETRA Application Error Boundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-[#ff5449]/10 border border-[#ff5449]/30 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-[#ff5449] text-3xl">warning</span>
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Q-NETRA Shield Initializing</h1>
+          <p className="text-sm text-[#8E919A] max-w-md mb-6">
+            An unexpected render issue occurred. Click reload to reinitialize the on-device safety engine.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2.5 bg-[#c3f400] text-[#161e00] font-semibold rounded-xl text-sm shadow-lg hover:bg-[#b2df00] transition"
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
 
