@@ -6,6 +6,7 @@ import { generateTrustChain } from '../trust/trustChainService';
 import { generatePaymentExplanation } from '../ai/geminiAdvisorService';
 import { analyzeMessageText } from '../message/messageAnalysisService';
 import { evaluateIntentTrailCorrelation } from '../story/storyCorrelationService';
+import { computeRiskScore } from './riskScoringEngine';
 
 export async function evaluatePaymentRisk(request: PaymentAnalysisRequest): Promise<PaymentCheck & { graphSummary?: any }> {
   // 1. Input Sanitization
@@ -26,61 +27,28 @@ export async function evaluatePaymentRisk(request: PaymentAnalysisRequest): Prom
 
   // 2. Server-side message / note analysis
   const serverMsgAnalysis = rawNote ? analyzeMessageText(rawNote) : { isHighRisk: false, signals: [] };
-  const isCoerciveNote = serverMsgAnalysis.isHighRisk || /urgent|refund|blocked|otp|apk|task|fee|penalty|deposit|disconnect|tonight|police|kyc/i.test(rawNote);
 
-  // 3. Recipient KYC & Mule DB Lookup
+  // 3. Compute Risk via Feature Engine
+  const riskBreakdown = computeRiskScore({
+    vpa,
+    amount,
+    note,
+    localContext
+  });
+
   const known = entityRepository.findByVpa(vpa);
-  const highRiskTokens = ['abc123@upi', 'abc@upi', 'disconnection.desk', 'refund', 'lottery', 'kyc', 'support', 'bonus', 'prizewin', 'task'];
-  const isHighRiskToken = highRiskTokens.some((t) => vpa.includes(t));
+  let riskLevel = riskBreakdown.riskLevel;
+  let stopDecision = riskBreakdown.stopDecision;
+  let headline = riskBreakdown.headline;
+  let stopReason = riskBreakdown.stopReason;
+  let riskTags = [...riskBreakdown.riskTags];
 
-  // 4. Contextual signal aggregation
-  const isLocalAiPressure = Boolean(localContext?.payment_pressure || localContext?.authority_claim);
-
-  let riskScore = 10;
-  let riskLevel: RiskLevel = 'SAFE';
-  let stopDecision = false;
-  let headline = 'Payment cleared by Q-NETRA shield.';
-  let stopReason = 'Verified recipient with clean peer transaction history.';
-  let connectedEntities = 2;
-  let elevatedRiskConnections = 0;
-  let riskTags: string[] = ['Verified VPA', 'Clean Velocity'];
-
-  const isVerifiedMerchant = known?.category === 'merchant' && known?.kycStatus === 'verified';
-  const isSuspiciousLargeAmount = amount >= 20000 && !isVerifiedMerchant;
-
-  if (known?.isKnownMule || isHighRiskToken || vpa.startsWith('abc') || isSuspiciousLargeAmount || isCoerciveNote || isLocalAiPressure) {
-    riskScore = Math.max(known?.baseRiskScore || 92, 85);
-    riskLevel = 'HIGH RISK';
-    stopDecision = true;
-    headline = "The payment looks normal. The network behind it doesn't.";
-    stopReason = 'The available payment context is inconsistent with recipient and network evidence. Do not proceed.';
-    connectedEntities = 7;
-    elevatedRiskConnections = 3;
-    riskTags = ['Mule Account Flagged', 'Layer-1 Dispersal Node', 'Threat Pattern Detected', 'Story-Trail Inconsistency'];
-  } else if (known?.category === 'individual' && known?.kycStatus === 'unverified') {
-    riskScore = known.baseRiskScore;
-    riskLevel = 'MODERATE';
-    stopDecision = false;
-    headline = 'Unverified recipient. Proceed with caution.';
-    stopReason = 'Recipient handle is recently created with limited transaction depth across banking clearing networks. Verify identity directly before sending funds.';
-    connectedEntities = 4;
-    elevatedRiskConnections = 1;
-    riskTags = ['Unverified Handle', 'New Contact', 'Low Historical Depth'];
-  } else if (isVerifiedMerchant) {
-    riskScore = known?.baseRiskScore || 2;
-    riskLevel = 'SAFE';
-    stopDecision = false;
-    headline = 'Payment cleared by Q-NETRA shield.';
-    stopReason = 'Verified enterprise merchant with stable KYC history and direct tier-1 banking clearing routes.';
-    connectedEntities = 2;
-    elevatedRiskConnections = 0;
-    riskTags = ['Verified Merchant', 'Clean Velocity', 'Direct NPCI Route'];
-  }
-
-  // 5. Dynamic Network Graph Construction
+  // 4. Dynamic Network Graph Construction
   const graphData = buildGraphForEntity(vpa, riskLevel);
+  const connectedEntities = graphData.totalConnectedEntities || graphData.nodes.length;
+  const elevatedRiskConnections = graphData.elevatedRiskConnections || 0;
 
-  // 6. Intent-to-Trail Story Correlation
+  // 5. Intent-to-Trail Story Correlation
   const storyCorrelation = evaluateIntentTrailCorrelation({
     vpa,
     amount,
@@ -94,7 +62,6 @@ export async function evaluatePaymentRisk(request: PaymentAnalysisRequest): Prom
   if (storyCorrelation.mismatchDetected && storyCorrelation.mismatchSeverity === 'CRITICAL') {
     riskLevel = 'HIGH RISK';
     stopDecision = true;
-    riskScore = Math.max(riskScore, 90);
     headline = "The payment looks normal. The network behind it doesn't.";
     stopReason = 'The available payment context is inconsistent with recipient and network evidence. Do not proceed.';
     if (!riskTags.includes('Story-Trail Inconsistency')) {
@@ -102,7 +69,7 @@ export async function evaluatePaymentRisk(request: PaymentAnalysisRequest): Prom
     }
   }
 
-  // 7. Trust Chain Synthesis
+  // 6. Trust Chain Synthesis
   const trustChain = generateTrustChain({
     vpa,
     amount,
@@ -111,11 +78,11 @@ export async function evaluatePaymentRisk(request: PaymentAnalysisRequest): Prom
     stopDecision,
     connectedEntities,
     elevatedRiskConnections,
-    urgencyDetected: Boolean(localContext?.urgency || isCoerciveNote),
+    urgencyDetected: Boolean(localContext?.urgency || serverMsgAnalysis.isHighRisk),
     localContext
   });
 
-  // 8. AI Forensic Explanation
+  // 7. AI Forensic Explanation
   const aiExplanation = await generatePaymentExplanation(vpa, amount, riskLevel, note, riskTags);
 
   return {

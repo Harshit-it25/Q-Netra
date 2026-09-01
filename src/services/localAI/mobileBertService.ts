@@ -1,6 +1,8 @@
-import { LocalPaymentContext } from '../../domain/payment/types';
-import { detectDeviceCapabilities } from '../device/deviceCapabilityService';
+import * as ort from 'onnxruntime-web';
 import { modelLoader } from './modelLoader';
+import { tokenizeInput } from './tokenizer';
+import { detectDeviceCapabilities } from '../device/deviceCapabilityService';
+import { analyzeContextHeuristically } from './heuristicContextService';
 
 export interface MobileBertSignals {
   legitimate: number;
@@ -16,7 +18,7 @@ export interface MobileBertSignals {
 export interface MobileBertAnalysisResult {
   model: string;
   parameters: string;
-  execution: 'LOCAL' | 'CPU' | 'NPU (QNN)' | 'GPU' | 'V8_JIT';
+  execution: 'ONNX_WASM' | 'CPU' | 'HEURISTIC_FALLBACK';
   signals: MobileBertSignals;
   predictedLabels: string[];
   signalStrength: 'STRONG' | 'MODERATE' | 'CLEAN';
@@ -28,213 +30,150 @@ export interface MobileBertAnalysisResult {
   };
   hardwarePlatform?: string;
   executionRuntime?: string;
+  isHeuristicFallback: boolean;
 }
 
-// Token feature weights trained from fine-tuned MobileBERT context heads
-const VOCAB_WEIGHTS: Record<string, Partial<MobileBertSignals>> = {
-  // Urgent & Pressure terms
-  'disconnect': { payment_pressure: 0.88, urgency: 0.72, fraud: 0.85, social_engineering: 0.79 },
-  'disconnection': { payment_pressure: 0.88, urgency: 0.72, fraud: 0.85, social_engineering: 0.79 },
-  'disconnected': { payment_pressure: 0.88, urgency: 0.72, fraud: 0.85, social_engineering: 0.79 },
-  'cut': { payment_pressure: 0.85, urgency: 0.65, fraud: 0.80 },
-  'power': { authority_impersonation: 0.60, payment_pressure: 0.65 },
-  'powercut': { payment_pressure: 0.90, urgency: 0.70, fraud: 0.85 },
-  'electricity': { authority_impersonation: 0.75, payment_request: 0.55 },
-  'bijli': { authority_impersonation: 0.78, payment_pressure: 0.82, fraud: 0.84 },
-  'immediately': { urgency: 0.92, payment_pressure: 0.50, fraud: 0.45 },
-  'urgent': { urgency: 0.90, payment_pressure: 0.45 },
-  'urgently': { urgency: 0.90, payment_pressure: 0.45 },
-  'tonight': { urgency: 0.86, payment_pressure: 0.55 },
-  'prevent': { payment_pressure: 0.50, fraud: 0.40 },
-  'avoid': { payment_pressure: 0.50, fraud: 0.40 },
-  'block': { payment_pressure: 0.89, authority_impersonation: 0.65, fraud: 0.82 },
-  'blocked': { payment_pressure: 0.89, authority_impersonation: 0.65, fraud: 0.82 },
-  'freeze': { payment_pressure: 0.91, fraud: 0.84 },
-  'penalty': { payment_pressure: 0.84, payment_request: 0.60 },
-  'arrest': { payment_pressure: 0.95, authority_impersonation: 0.88, fraud: 0.92, social_engineering: 0.90 },
-  'police': { authority_impersonation: 0.90, payment_pressure: 0.75, fraud: 0.88 },
-  'court': { authority_impersonation: 0.85, payment_pressure: 0.70 },
-  'fir': { authority_impersonation: 0.88, payment_pressure: 0.80 },
+const LABEL_NAMES = [
+  'LEGITIMATE',
+  'PAYMENT_REQUEST',
+  'URGENCY',
+  'PAYMENT_PRESSURE',
+  'AUTHORITY_IMPERSONATION',
+  'PHISHING',
+  'SOCIAL_ENGINEERING',
+  'FRAUD'
+] as const;
 
-  // Authority & KYC
-  'kyc': { authority_impersonation: 0.88, fraud: 0.70, phishing: 0.65 },
-  'yono': { authority_impersonation: 0.92, fraud: 0.75, phishing: 0.70 },
-  'sbi': { authority_impersonation: 0.70, payment_request: 0.35 },
-  'hdfc': { authority_impersonation: 0.70, payment_request: 0.35 },
-  'trai': { authority_impersonation: 0.92, fraud: 0.85 },
-  'officer': { authority_impersonation: 0.78, social_engineering: 0.65 },
-
-  // Phishing / APK / Tools
-  'apk': { phishing: 0.96, fraud: 0.94, social_engineering: 0.90 },
-  'quicksupport': { phishing: 0.95, fraud: 0.95, social_engineering: 0.92 },
-  'anydesk': { phishing: 0.95, fraud: 0.95, social_engineering: 0.92 },
-  'teamviewer': { phishing: 0.95, fraud: 0.95, social_engineering: 0.92 },
-  'bit.ly': { phishing: 0.85, fraud: 0.75 },
-  'tinyurl': { phishing: 0.85, fraud: 0.75 },
-
-  // Payment Requests
-  'pay': { payment_request: 0.75 },
-  'transfer': { payment_request: 0.78 },
-  'send': { payment_request: 0.65 },
-  'bill': { payment_request: 0.70 },
-  'recharge': { payment_request: 0.60 },
-  'fee': { payment_request: 0.72 },
-  'upi': { payment_request: 0.68 },
-
-  // Legitimate / Official / Organic context
-  'official': { legitimate: 0.82, fraud: -0.40 },
-  'portal': { legitimate: 0.80, fraud: -0.35 },
-  'debited': { legitimate: 0.88, fraud: -0.50, payment_pressure: -0.40 },
-  'successful': { legitimate: 0.92, fraud: -0.60 },
-  'balance': { legitimate: 0.75 },
-  'swiggy': { legitimate: 0.85, payment_request: 0.50 },
-  'zomato': { legitimate: 0.85, payment_request: 0.50 },
-  'amazon': { legitimate: 0.85 },
-  'hospital': { legitimate: 0.70, urgency: 0.60, payment_pressure: -0.30 },
-  'pharmacy': { legitimate: 0.75, payment_request: 0.50 }
-};
-
-/**
- * Fast subword tokenization simulation matching WordPiece / MobileBERT tokenizer.
- */
-function tokenizeText(text: string): string[] {
-  const clean = text.toLowerCase().replace(/[^a-z0-9₹@.\-_/:\s]/g, ' ');
-  return clean.split(/\s+/).filter(Boolean);
-}
-
-/**
- * Sigmoid activation for multi-label calibrated probability calculation
- */
 function sigmoid(x: number): number {
   return 1 / (1 + Math.exp(-x));
 }
 
-export function classifyWithMobileBert(rawText: string): MobileBertAnalysisResult {
+/**
+ * Runs genuine on-device MobileBERT inference via ONNX Runtime WebAssembly.
+ */
+export async function classifyWithMobileBertAsync(rawText: string): Promise<MobileBertAnalysisResult> {
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const text = String(rawText || '').trim();
 
-  // Step 1: Tokenization
-  const tokens = tokenizeText(text);
+  // Ensure model session is initialized
+  let session = modelLoader.getSession();
+  if (!session) {
+    const initialized = await modelLoader.initialize();
+    if (initialized) {
+      session = modelLoader.getSession();
+    }
+  }
+
+  // If session cannot be created or loaded, return explicit heuristic fallback
+  if (!session) {
+    const fallbackResult = analyzeContextHeuristically(text);
+    const tEnd = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const totalMs = Math.max(1, Math.round(tEnd - t0));
+    return {
+      model: 'Heuristic Context Analyzer (ONNX session unavailable)',
+      parameters: 'Rule-based',
+      execution: 'HEURISTIC_FALLBACK',
+      signals: {
+        legitimate: fallbackResult.payment_pressure || fallbackResult.authority_claim ? 0.05 : 0.95,
+        payment_request: fallbackResult.payment_request ? 0.85 : 0.10,
+        urgency: fallbackResult.urgency ? 0.90 : 0.10,
+        payment_pressure: fallbackResult.payment_pressure ? 0.92 : 0.08,
+        authority_impersonation: fallbackResult.authority_claim ? 0.88 : 0.08,
+        phishing: fallbackResult.threat_indicators.some(t => t.toLowerCase().includes('apk') || t.toLowerCase().includes('link')) ? 0.90 : 0.05,
+        social_engineering: fallbackResult.payment_pressure && fallbackResult.authority_claim ? 0.85 : 0.10,
+        fraud: fallbackResult.heuristicScore || 0.10
+      },
+      predictedLabels: fallbackResult.payment_pressure ? ['FRAUD', 'PAYMENT_PRESSURE'] : ['LEGITIMATE'],
+      signalStrength: fallbackResult.signalStrength,
+      threatIndicators: fallbackResult.threat_indicators,
+      latencyBreakdown: {
+        tokenizerMs: 0,
+        inferenceMs: totalMs,
+        totalMs
+      },
+      hardwarePlatform: 'Standard CPU',
+      executionRuntime: 'Heuristic fallback (model unavailable)',
+      isHeuristicFallback: true
+    };
+  }
+
+  // 1. Genuine Tokenization matching MobileBERT training
+  const tokenized = tokenizeInput(text, 64);
   const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const tokenizerMs = Number((t1 - t0).toFixed(2));
+  const tokenizerMs = Number((t1 - t0).toFixed(3));
 
-  // Step 2: Transformer Multi-Head Context Embedding & Logit Aggregation
-  let logitLegit = 0.5;
-  let logitPr = -1.2;
-  let logitUrg = -1.5;
-  let logitPress = -1.8;
-  let logitAuth = -1.6;
-  let logitPhish = -2.0;
-  let logitSe = -1.7;
-  let logitFraud = -1.5;
+  // 2. Prepare int64 tensors
+  const inputTensor = new ort.Tensor('int64', tokenized.inputIds, [1, 64]);
+  const maskTensor = new ort.Tensor('int64', tokenized.attentionMask, [1, 64]);
 
-  // Regex checks for structured tokens
-  if (/(?:₹|rs\.?|inr)\s*\d+/i.test(text)) {
-    logitPr += 1.8;
-  }
-  if (/[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z0-9.\-_]{2,64}/.test(text)) {
-    logitPr += 1.2;
-  }
-  if (/\b(?:within\s*(?:5|10|15|30|60)\s*(?:mins?|minutes?|hours?)|tonight|today|immediately)\b/i.test(text)) {
-    logitUrg += 2.0;
-  }
-  if (/https?:\/\/|\.apk/i.test(text)) {
-    logitPhish += 2.5;
-  }
-  if (/\b(?:disconnect|disconnection|power\s*cut|cut|freeze|block|arrest|penalty)\b/i.test(text)) {
-    logitPress += 2.2;
-  }
-
-  // Token activations
-  for (const tok of tokens) {
-    // Direct match or prefix match
-    let weights = VOCAB_WEIGHTS[tok];
-    if (!weights) {
-      const matchingKey = Object.keys(VOCAB_WEIGHTS).find(k => k.length >= 4 && (tok.startsWith(k) || k.startsWith(tok)));
-      if (matchingKey) weights = VOCAB_WEIGHTS[matchingKey];
-    }
-    if (weights) {
-      if (weights.legitimate !== undefined) logitLegit += weights.legitimate * 2.0;
-      if (weights.payment_request !== undefined) logitPr += weights.payment_request * 2.2;
-      if (weights.urgency !== undefined) logitUrg += weights.urgency * 2.2;
-      if (weights.payment_pressure !== undefined) logitPress += weights.payment_pressure * 2.5;
-      if (weights.authority_impersonation !== undefined) logitAuth += weights.authority_impersonation * 2.4;
-      if (weights.phishing !== undefined) logitPhish += weights.phishing * 2.6;
-      if (weights.social_engineering !== undefined) logitSe += weights.social_engineering * 2.3;
-      if (weights.fraud !== undefined) logitFraud += weights.fraud * 2.4;
-    }
-  }
-
-  // Inter-head cross-attention logic:
-  // If payment_pressure + urgency + authority -> amplify fraud & social engineering
-  if (logitPress > 0 && logitUrg > 0) {
-    logitFraud += 1.5;
-    logitSe += 1.8;
-    logitLegit -= 2.0;
-  }
-
-  // If text mentions official portal or verified bank debit -> suppress false alarm
-  if (/official\s*(?:utility\s*)?portal|debited\s*from\s*your\s*a\/c/i.test(text)) {
-    logitLegit += 2.5;
-    logitPress -= 2.0;
-    logitFraud -= 2.5;
-  }
-
-  const sigLegit = Number(sigmoid(logitLegit).toFixed(4));
-  const sigPr = Number(sigmoid(logitPr).toFixed(4));
-  const sigUrg = Number(sigmoid(logitUrg).toFixed(4));
-  const sigPress = Number(sigmoid(logitPress).toFixed(4));
-  const sigAuth = Number(sigmoid(logitAuth).toFixed(4));
-  const sigPhish = Number(sigmoid(logitPhish).toFixed(4));
-  const sigSe = Number(sigmoid(logitSe).toFixed(4));
-  const sigFraud = Number(sigmoid(logitFraud).toFixed(4));
-
-  const signals: MobileBertSignals = {
-    legitimate: sigLegit,
-    payment_request: sigPr,
-    urgency: sigUrg,
-    payment_pressure: sigPress,
-    authority_impersonation: sigAuth,
-    phishing: sigPhish,
-    social_engineering: sigSe,
-    fraud: sigFraud
+  // 3. Execute ONNX graph
+  const t2 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const feeds: Record<string, ort.Tensor> = {
+    input_ids: inputTensor,
+    attention_mask: maskTensor
   };
 
+  const results = await session.run(feeds);
+  const t3 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const inferenceMs = Number((t3 - t2).toFixed(3));
+
+  const logitsTensor = results.logits;
+  if (!logitsTensor || !logitsTensor.data) {
+    throw new Error('ONNX inference failed: logits tensor missing from session output');
+  }
+
+  const rawLogits = Array.from(logitsTensor.data as Float32Array);
+  
+  // 4. Compute Sigmoid Probabilities across all 8 classes
+  const probs = rawLogits.map(l => Number(sigmoid(l).toFixed(4)));
+
+  const signals: MobileBertSignals = {
+    legitimate: probs[0] ?? 0.5,
+    payment_request: probs[1] ?? 0.5,
+    urgency: probs[2] ?? 0.1,
+    payment_pressure: probs[3] ?? 0.1,
+    authority_impersonation: probs[4] ?? 0.1,
+    phishing: probs[5] ?? 0.1,
+    social_engineering: probs[6] ?? 0.1,
+    fraud: probs[7] ?? 0.1
+  };
+
+  // Predicted multi-label tags
   const predictedLabels: string[] = [];
-  if (sigLegit >= 0.50 && sigFraud < 0.40) predictedLabels.push('LEGITIMATE');
-  if (sigPr >= 0.45) predictedLabels.push('PAYMENT_REQUEST');
-  if (sigUrg >= 0.45) predictedLabels.push('URGENCY');
-  if (sigPress >= 0.45) predictedLabels.push('PAYMENT_PRESSURE');
-  if (sigAuth >= 0.45) predictedLabels.push('AUTHORITY_IMPERSONATION');
-  if (sigPhish >= 0.45) predictedLabels.push('PHISHING');
-  if (sigSe >= 0.45) predictedLabels.push('SOCIAL_ENGINEERING');
-  if (sigFraud >= 0.50) predictedLabels.push('FRAUD');
+  if (signals.legitimate >= 0.50 && signals.fraud < 0.40) predictedLabels.push('LEGITIMATE');
+  if (signals.payment_request >= 0.40) predictedLabels.push('PAYMENT_REQUEST');
+  if (signals.urgency >= 0.40) predictedLabels.push('URGENCY');
+  if (signals.payment_pressure >= 0.40) predictedLabels.push('PAYMENT_PRESSURE');
+  if (signals.authority_impersonation >= 0.40) predictedLabels.push('AUTHORITY_IMPERSONATION');
+  if (signals.phishing >= 0.40) predictedLabels.push('PHISHING');
+  if (signals.social_engineering >= 0.40) predictedLabels.push('SOCIAL_ENGINEERING');
+  if (signals.fraud >= 0.40) predictedLabels.push('FRAUD');
 
   const threatIndicators: string[] = [];
-  if (sigPress >= 0.45) threatIndicators.push('Power / Penalty Coercion Pressure');
-  if (sigUrg >= 0.45) threatIndicators.push('Artificial Time Urgency');
-  if (sigAuth >= 0.45) threatIndicators.push('Authority Impersonation Claim');
-  if (sigPhish >= 0.45) threatIndicators.push('Malicious Link / Remote Access APK');
-  if (sigSe >= 0.45) threatIndicators.push('Social Engineering Manipulation');
+  if (signals.payment_pressure >= 0.40) threatIndicators.push('Power / Penalty Coercion Pressure');
+  if (signals.urgency >= 0.40) threatIndicators.push('Artificial Time Urgency');
+  if (signals.authority_impersonation >= 0.40) threatIndicators.push('Authority Impersonation Claim');
+  if (signals.phishing >= 0.40) threatIndicators.push('Malicious Link / Remote Access APK');
+  if (signals.social_engineering >= 0.40) threatIndicators.push('Social Engineering Manipulation');
 
   let signalStrength: 'STRONG' | 'MODERATE' | 'CLEAN' = 'CLEAN';
-  if (sigFraud >= 0.70 || sigPress >= 0.70 || sigPhish >= 0.70) {
+  if (signals.fraud >= 0.65 || signals.payment_pressure >= 0.65 || signals.phishing >= 0.65) {
     signalStrength = 'STRONG';
-  } else if (sigFraud >= 0.40 || sigUrg >= 0.50 || sigAuth >= 0.50) {
+  } else if (signals.fraud >= 0.35 || signals.urgency >= 0.40 || signals.authority_impersonation >= 0.40) {
     signalStrength = 'MODERATE';
   }
 
-  const t2 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const totalMs = Math.max(1, Math.round(t2 - t0));
-  const inferenceMs = Math.max(1, Math.round(t2 - t1));
+  const tEnd = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const totalMs = Math.max(1, Math.round(tEnd - t0));
 
-  const caps = detectDeviceCapabilities();
+  modelLoader.recordLatency(totalMs);
   const metadata = modelLoader.getMetadata();
+  const caps = detectDeviceCapabilities();
 
   return {
     model: metadata.name,
     parameters: metadata.parameters,
-    execution: metadata.activeBackend,
+    execution: 'ONNX_WASM',
     signals,
     predictedLabels,
     signalStrength,
@@ -244,7 +183,64 @@ export function classifyWithMobileBert(rawText: string): MobileBertAnalysisResul
       inferenceMs,
       totalMs
     },
-    hardwarePlatform: caps.isSnapdragon ? 'Snapdragon platform detected' : 'Standard CPU Platform',
-    executionRuntime: caps.isSnapdragon ? 'On-device V8/JIT (CPU)' : 'On-device V8/JIT'
+    hardwarePlatform: caps.isSnapdragon ? 'Snapdragon Mobile WebAssembly' : 'Standard WebAssembly Runtime',
+    executionRuntime: 'ONNX Runtime Web (WASM)',
+    isHeuristicFallback: false
+  };
+}
+
+/**
+ * Synchronous execution wrapper for non-async callers.
+ * If model is uninitialized or running in synchronous constraint, falls back to heuristic engine
+ * and truthfully tags the result as heuristic fallback.
+ */
+export function classifyWithMobileBert(rawText: string): MobileBertAnalysisResult {
+  const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const text = String(rawText || '').trim();
+
+  // If session is not synchronously available, execute heuristic analysis
+  const fallbackResult = analyzeContextHeuristically(text);
+  const tEnd = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const totalMs = Math.max(1, Math.round(tEnd - t0));
+
+  const isCoercive = fallbackResult.payment_pressure || fallbackResult.authority_claim || fallbackResult.urgency;
+
+  const signals: MobileBertSignals = {
+    legitimate: isCoercive ? 0.08 : 0.92,
+    payment_request: fallbackResult.payment_request ? 0.85 : 0.15,
+    urgency: fallbackResult.urgency ? 0.90 : 0.10,
+    payment_pressure: fallbackResult.payment_pressure ? 0.92 : 0.08,
+    authority_impersonation: fallbackResult.authority_claim ? 0.88 : 0.08,
+    phishing: fallbackResult.threat_indicators.some(t => t.toLowerCase().includes('apk') || t.toLowerCase().includes('link')) ? 0.92 : 0.05,
+    social_engineering: fallbackResult.payment_pressure && fallbackResult.authority_claim ? 0.88 : 0.10,
+    fraud: fallbackResult.heuristicScore || (isCoercive ? 0.85 : 0.08)
+  };
+
+  const predictedLabels: string[] = [];
+  if (signals.legitimate >= 0.50 && signals.fraud < 0.40) predictedLabels.push('LEGITIMATE');
+  if (signals.payment_request >= 0.40) predictedLabels.push('PAYMENT_REQUEST');
+  if (signals.urgency >= 0.40) predictedLabels.push('URGENCY');
+  if (signals.payment_pressure >= 0.40) predictedLabels.push('PAYMENT_PRESSURE');
+  if (signals.authority_impersonation >= 0.40) predictedLabels.push('AUTHORITY_IMPERSONATION');
+  if (signals.phishing >= 0.40) predictedLabels.push('PHISHING');
+  if (signals.social_engineering >= 0.40) predictedLabels.push('SOCIAL_ENGINEERING');
+  if (signals.fraud >= 0.40) predictedLabels.push('FRAUD');
+
+  return {
+    model: 'MobileBERT (Heuristic sync bridge)',
+    parameters: '25.3M (Heuristic mode)',
+    execution: 'HEURISTIC_FALLBACK',
+    signals,
+    predictedLabels,
+    signalStrength: fallbackResult.signalStrength,
+    threatIndicators: fallbackResult.threat_indicators,
+    latencyBreakdown: {
+      tokenizerMs: 0.1,
+      inferenceMs: totalMs,
+      totalMs
+    },
+    hardwarePlatform: 'Standard CPU',
+    executionRuntime: 'Heuristic fallback (sync mode)',
+    isHeuristicFallback: true
   };
 }

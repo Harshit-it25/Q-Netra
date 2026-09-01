@@ -1,145 +1,197 @@
 import { NetworkNode, NetworkLink, NetworkGraphData } from '../../../src/domain/network/types';
 import { RiskLevel } from '../../../src/domain/risk/types';
 import { entityRepository } from '../../repositories/entityRepository';
-import { graphRepository } from '../../repositories/graphRepository';
+import { identifyBankFromVpa } from '../../../src/services/qr/upiParserService';
 
+/**
+ * Builds dynamic network graph topology strictly from entity repository records,
+ * device fingerprints, and banking routing gateways.
+ */
 export function buildGraphForEntity(vpa: string, riskLevel: RiskLevel): NetworkGraphData {
   const normalizedVpa = String(vpa || 'unknown@upi').trim().toLowerCase();
   const known = entityRepository.findByVpa(normalizedVpa);
+  const bankName = identifyBankFromVpa(normalizedVpa);
 
-  if (riskLevel === 'HIGH RISK' || normalizedVpa.includes('abc') || normalizedVpa.includes('mule') || normalizedVpa.includes('lottery')) {
-    const defaultGraph = graphRepository.getDefaultHighRiskGraph();
-    const nodes: NetworkNode[] = defaultGraph.nodes.map((n) => {
-      if (n.id === 'target') {
-        return {
-          ...n,
-          label: normalizedVpa,
-          riskScore: known?.baseRiskScore || 94
-        };
-      }
-      return { ...n };
-    });
+  const nodes: NetworkNode[] = [];
+  const links: NetworkLink[] = [];
 
-    return {
-      nodes,
-      links: defaultGraph.links,
-      totalConnectedEntities: 7,
-      elevatedRiskConnections: 3,
-      clusterType: 'Mule Ring Fan-Out (Layer-1 to P2P Crypto)',
-      fanoutVelocityScore: 92,
-      layer1MuleAccounts: ['mule_781@axis', 'quick_pay88@sbi'],
-      cryptoOffRamps: ['P2P_Exch_Wallet#9'],
-      sharedDeviceFingerprint: known?.deviceFingerprint || 'IMEI:864209118942',
-      summary: 'Target is the entry funnel into a 7-node syndicate with 3 elevated-risk mule nodes and rapid crypto off-ramp.'
-    };
-  }
+  // 1. Center Target Node
+  const targetRiskScore = known?.baseRiskScore ?? (riskLevel === 'HIGH RISK' ? 88 : riskLevel === 'MODERATE' ? 48 : 4);
+  nodes.push({
+    id: 'target',
+    label: normalizedVpa,
+    type: 'target',
+    risk: riskLevel === 'HIGH RISK' ? 'high' : riskLevel === 'MODERATE' ? 'medium' : 'safe',
+    riskScore: targetRiskScore,
+    x: 320,
+    y: 200,
+    subtext: known?.name || (riskLevel === 'HIGH RISK' ? 'Target Recipient (Flagged Node)' : 'Target Recipient'),
+    transactionsLast24h: known?.avgDailyVolume ? Math.max(1, Math.round(known.avgDailyVolume / 20000)) : 5
+  });
 
-  if (riskLevel === 'MODERATE') {
-    const nodes: NetworkNode[] = [
-      {
-        id: 'target',
-        label: normalizedVpa,
-        type: 'target',
-        risk: 'medium',
-        riskScore: 58,
+  // 2. Direct Bank / NPCI Clearing Gateway Node
+  const bankLabel = bankName ? `${bankName} Gateway` : 'Commercial Bank Gateway';
+  nodes.push({
+    id: 'node-bank-gateway',
+    label: bankLabel,
+    type: 'safe',
+    risk: 'safe',
+    riskScore: 2,
+    x: 180,
+    y: 110,
+    subtext: 'Direct NPCI / UPI Tier-1 Clearing Route',
+    transactionsLast24h: 24000
+  });
+
+  links.push({
+    source: 'target',
+    target: 'node-bank-gateway',
+    amount: 'Direct Route',
+    isSuspicious: false,
+    label: 'Direct Clearing'
+  });
+
+  const layer1Mules: string[] = [];
+  const cryptoOffRamps: string[] = [];
+
+  // 3. Query Entity Repository for Co-Clustered Entities
+  if (known) {
+    // If entity is associated with a known cluster or device
+    if (known.clusterId) {
+      const allEntities = entityRepository.getAll();
+      const clusterPeers = allEntities.filter(
+        (e) => e.clusterId === known.clusterId && e.vpa.toLowerCase() !== normalizedVpa
+      );
+
+      clusterPeers.forEach((peer, idx) => {
+        const nodeId = `node-cluster-${idx + 1}`;
+        const isPeerHighRisk = (peer.baseRiskScore || 0) >= 70 || peer.isKnownMule;
+        if (peer.isKnownMule) {
+          layer1Mules.push(peer.vpa);
+        }
+
+        const angle = (idx + 1) * (Math.PI / 3) - Math.PI / 6;
+        const peerX = Math.round(320 + Math.cos(angle) * 160);
+        const peerY = Math.round(200 + Math.sin(angle) * 110);
+
+        nodes.push({
+          id: nodeId,
+          label: peer.vpa,
+          type: peer.category === 'mule' ? 'mule' : peer.category === 'merchant' ? 'merchant' : 'mule',
+          risk: isPeerHighRisk ? 'high' : 'medium',
+          riskScore: peer.baseRiskScore || 75,
+          x: peerX,
+          y: peerY,
+          subtext: peer.name || 'Co-Clustered Syndicate Node',
+          transactionsLast24h: peer.avgDailyVolume ? Math.round(peer.avgDailyVolume / 15000) : 35
+        });
+
+        links.push({
+          source: 'target',
+          target: nodeId,
+          amount: 'Cluster Link',
+          isSuspicious: isPeerHighRisk,
+          label: 'Shared Entity Cluster'
+        });
+      });
+    }
+
+    // Shared Device Fingerprint Node
+    if (known.deviceFingerprint) {
+      nodes.push({
+        id: 'node-device',
+        label: known.deviceFingerprint,
+        type: known.isKnownMule ? 'mule' : 'safe',
+        risk: known.isKnownMule ? 'high' : 'safe',
+        riskScore: known.isKnownMule ? 94 : 5,
         x: 320,
-        y: 200,
-        subtext: 'Target Merchant VPA (Low History)',
-        transactionsLast24h: 12
-      },
-      {
-        id: 'node-bank',
-        label: 'Commercial Bank Gateway',
-        type: 'safe',
-        risk: 'safe',
-        riskScore: 12,
-        x: 200,
-        y: 130,
-        subtext: 'Standard clearing settlement',
-        transactionsLast24h: 1500
-      },
-      {
+        y: 60,
+        subtext: known.isKnownMule ? 'Device shared across suspicious identities' : 'Verified Hardware Fingerprint',
+        transactionsLast24h: known.isKnownMule ? 48 : 2
+      });
+
+      links.push({
+        source: 'node-device',
+        target: 'target',
+        amount: 'Device Bound',
+        isSuspicious: Boolean(known.isKnownMule),
+        label: 'Hardware Fingerprint'
+      });
+    }
+
+    // IP Location / Gateway Node
+    if (known.ipLocation) {
+      nodes.push({
+        id: 'node-ip-location',
+        label: known.ipLocation,
+        type: known.isKnownMule ? 'mule' : 'safe',
+        risk: known.isKnownMule ? 'medium' : 'safe',
+        riskScore: known.isKnownMule ? 65 : 2,
+        x: 320,
+        y: 340,
+        subtext: 'Origin Network / Location Gateway',
+        transactionsLast24h: 120
+      });
+
+      links.push({
+        source: 'node-ip-location',
+        target: 'target',
+        amount: 'Session Route',
+        isSuspicious: false,
+        label: 'Network Origin'
+      });
+    }
+  } else {
+    // Unindexed / Unknown VPA
+    if (riskLevel === 'MODERATE') {
+      nodes.push({
         id: 'node-aggregator',
         label: 'Payment Gateway Partner',
         type: 'safe',
         risk: 'safe',
-        riskScore: 20,
-        x: 440,
-        y: 130,
-        subtext: 'Recently registered sub-merchant ID',
+        riskScore: 18,
+        x: 460,
+        y: 120,
+        subtext: 'Sub-merchant payment routing partner',
         transactionsLast24h: 88
-      },
-      {
-        id: 'node-device',
-        label: 'Merchant POS Terminal',
-        type: 'safe',
-        risk: 'medium',
-        riskScore: 45,
-        x: 320,
-        y: 310,
-        subtext: 'Device ID active for 14 days',
-        transactionsLast24h: 12
-      }
-    ];
+      });
 
-    const links: NetworkLink[] = [
-      { source: 'target', target: 'node-bank', amount: 'Settlement', isSuspicious: false, label: 'Settlement' },
-      { source: 'target', target: 'node-aggregator', amount: 'Routing', isSuspicious: false, label: 'Gateway' },
-      { source: 'node-device', target: 'target', amount: 'Terminal', isSuspicious: false, label: 'Origin POS' }
-    ];
-
-    return {
-      nodes,
-      links,
-      totalConnectedEntities: 4,
-      elevatedRiskConnections: 1,
-      clusterType: 'New Merchant Terminal (Sparse History)',
-      fanoutVelocityScore: 35,
-      layer1MuleAccounts: [],
-      cryptoOffRamps: [],
-      summary: 'Isolated merchant account with limited peer transaction depth (14 days active).'
-    };
+      links.push({
+        source: 'target',
+        target: 'node-aggregator',
+        amount: 'Routing',
+        isSuspicious: false,
+        label: 'Gateway Route'
+      });
+    }
   }
 
-  // Safe / Clean Graph
-  const nodes: NetworkNode[] = [
-    {
-      id: 'target',
-      label: normalizedVpa,
-      type: 'target',
-      risk: 'safe',
-      riskScore: 6,
-      x: 320,
-      y: 200,
-      subtext: 'Verified Individual / Whitelisted Merchant',
-      transactionsLast24h: 3
-    },
-    {
-      id: 'node-bank-direct',
-      label: 'Scheduled Commercial Bank Core',
-      type: 'safe',
-      risk: 'safe',
-      riskScore: 2,
-      x: 320,
-      y: 110,
-      subtext: 'Direct NPCI / UPI Tier-1 Route',
-      transactionsLast24h: 24000
-    }
-  ];
+  const elevatedCount = nodes.filter(
+    (n) => n.id !== 'target' && (n.risk === 'high' || n.risk === 'medium')
+  ).length;
 
-  const links: NetworkLink[] = [
-    { source: 'target', target: 'node-bank-direct', amount: 'Direct Credit', isSuspicious: false, label: 'Direct Clearing' }
-  ];
+  let clusterType = 'Direct Peer-to-Bank (Clean Topology)';
+  if (known?.isKnownMule || elevatedCount >= 2) {
+    clusterType = `Syndicate Cluster (${known?.clusterId || 'High-Risk Network'})`;
+  } else if (riskLevel === 'MODERATE') {
+    clusterType = 'Unindexed Counterparty (Sparse Routing Depth)';
+  }
+
+  let summary = `Direct commercial clearing route with NPCI settlement for ${normalizedVpa}.`;
+  if (elevatedCount > 0) {
+    summary = `Target ${normalizedVpa} is connected to ${nodes.length} nodes including ${elevatedCount} elevated-risk entity relation(s).`;
+  }
 
   return {
     nodes,
     links,
-    totalConnectedEntities: 2,
-    elevatedRiskConnections: 0,
-    clusterType: 'Direct Peer-to-Bank (Clean Topology)',
-    fanoutVelocityScore: 5,
-    layer1MuleAccounts: [],
-    cryptoOffRamps: [],
-    summary: 'Direct connection to verified tier-1 banking infrastructure with zero anomalous fan-out.'
+    totalConnectedEntities: nodes.length,
+    elevatedRiskConnections: elevatedCount,
+    clusterType,
+    fanoutVelocityScore: known?.isKnownMule ? 85 : riskLevel === 'MODERATE' ? 30 : 5,
+    layer1MuleAccounts: layer1Mules,
+    cryptoOffRamps,
+    sharedDeviceFingerprint: known?.deviceFingerprint,
+    summary
   };
 }

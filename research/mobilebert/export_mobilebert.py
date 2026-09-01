@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import torch
 import onnx
 
@@ -15,7 +16,6 @@ if PROJECT_ROOT not in sys.path:
 
 from research.mobilebert.train_mobilebert import MobileBertBottleneckEncoder
 
-RESEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS_DIR = os.path.join(RESEARCH_DIR, 'models')
 
 def export_to_onnx():
@@ -28,11 +28,11 @@ def export_to_onnx():
         raise FileNotFoundError(f"Checkpoint not found at {weights_path}. Run train_mobilebert.py first.")
         
     checkpoint = torch.load(weights_path, map_location='cpu', weights_only=False)
-    model = MobileBertBottleneckEncoder()
+    model = MobileBertBottleneckEncoder(vocab_size=30522)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     
-    dummy_input_ids = torch.randint(0, 28000, (1, 64), dtype=torch.long)
+    dummy_input_ids = torch.randint(0, 30522, (1, 64), dtype=torch.long)
     dummy_attention_mask = torch.ones((1, 64), dtype=torch.long)
     
     onnx_out_path = os.path.join(MODELS_DIR, 'mobilebert_context_fp32.onnx')

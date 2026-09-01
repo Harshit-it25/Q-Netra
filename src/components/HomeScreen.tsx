@@ -45,7 +45,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <main className="px-4 pt-6 pb-28 flex flex-col gap-6 max-w-2xl mx-auto w-full relative">
+    <main className="px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-6 max-w-2xl mx-auto w-full relative">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#1A1A1A] border border-[#abd600]/40 text-[#e5e2e1] px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-mono-data">

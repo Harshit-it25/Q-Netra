@@ -273,6 +273,25 @@ npm run dev
 ```
 Open `http://localhost:5173` (or `http://localhost:3000`) in your browser.
 
+### 📱 Android APK Packaging & Physical Snapdragon Testing
+
+Q-NETRA AI is configured with **Capacitor** to compile directly into a standalone Android APK (`ai.qnetra.app`) for physical smartphone testing:
+
+```bash
+# 1. Build production web bundle and sync to Android wrapper
+npm run cap:build
+
+# 2. Build Debug APK using Gradle
+cd android && ./gradlew assembleDebug
+
+# 3. Install debug APK directly to connected Snapdragon / Android phone
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+- **Execution Engine:** Runs on-device MobileBERT INT8 on Qualcomm Kryo CPU (`CPUExecutionProvider`).
+- **Permissions:** Only `CAMERA`, `RECORD_AUDIO`, `INTERNET`, `ACCESS_NETWORK_STATE` (Zero SMS read permissions).
+- **Offline Intelligence:** MobileBERT context inference & QR decoding work 100% offline in Airplane Mode.
+
 ---
 
 ## 🧪 Technical Verification & Audit Suite
@@ -280,7 +299,7 @@ Open `http://localhost:5173` (or `http://localhost:3000`) in your browser.
 Run the full verification suite directly from your terminal:
 
 ```bash
-# 1. Run all 35 domain & service test suites
+# 1. Run all 38 domain & service test suites
 npm test
 
 # 2. TypeScript typecheck
@@ -289,7 +308,7 @@ npm run lint
 # 3. Build production bundle (Vite + esbuild)
 npm run build
 
-# 4. Dependency security audit (0 vulnerabilities)
+# 4. Dependency security audit
 npm audit
 
 # 5. Run Red-Team & Adversarial 30-Scenario Functional Audit
@@ -303,14 +322,16 @@ python research/scripts/benchmark_mobilebert_end_to_end.py
 
 ## 📚 Technical Documentation & Audit Suite
 
-Explore the deep technical validation documents in the [`docs/`](docs/) directory:
+Explore the deep technical validation documents across the repository:
 
+- 📱 **[Snapdragon Real Device Test Report](research/reports/SNAPDRAGON_REAL_DEVICE_TEST.md)** — Empirical 100-run latency, cold start, thermal test, and desktop comparison on physical Snapdragon testbed.
+- ⚖️ **[Claims Audit & Compliance](CLAIMS_AUDIT.md)** — Strict claims audit certifying CPU execution and zero false NPU claims.
+- 🚀 **[Future Qualcomm QNN Acceleration](docs/FUTURE_QNN_ACCELERATION.md)** — Qualcomm QNN SDK & Hexagon NPU native acceleration blueprint.
 - 📄 **[Final Validation Report](docs/FINAL_VALIDATION_REPORT.md)** — Exhaustive 18-section audit report with Judge Truth Matrix.
 - 📦 **[System Inventory](docs/FINAL_SYSTEM_TEST_INVENTORY.md)** — Component classification (`REAL` / `SIMULATED` / `SEEDED` / `FALLBACK`).
 - 🛡️ **[Demo Failure Matrix](docs/FINAL_DEMO_FAILURE_MATRIX.md)** — Resilience under network loss, model crash, or permission denial.
 - 🐛 **[Bug Register](docs/FINAL_BUG_REGISTER.md)** — Complete bug tracking log (0 open P0/P1 issues).
 - 🎙️ **[BHASHINI Live Validation](docs/BHASHINI_LIVE_VALIDATION.md)** — Speech-to-Text and Text-to-Speech live test matrix.
-- ⚖️ **[Claims Audit](docs/CLAIMS_AUDIT.md)** — Strict claims audit and forbidden claims blacklist.
 
 ### 📑 Microsoft Word (.docx) Reports (`docx/`):
 - 📘 **[Q-NETRA Final Validation Report](docx/Q_NETRA_FINAL_VALIDATION_REPORT.docx)** — Complete system audit and benchmark report in `.docx` format.

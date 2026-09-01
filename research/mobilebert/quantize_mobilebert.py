@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 import numpy as np
 import pandas as pd
 import onnx
@@ -18,12 +19,12 @@ PROJECT_ROOT = os.path.dirname(RESEARCH_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from research.mobilebert.train_mobilebert import SimpleWordPieceTokenizer, LABEL_COLUMNS
+from research.mobilebert.train_mobilebert import get_real_tokenizer, LABEL_COLUMNS
 
-RESEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS_DIR = os.path.join(RESEARCH_DIR, 'models')
 DATA_DIR = os.path.join(RESEARCH_DIR, 'datasets', 'external')
 REPORTS_DIR = os.path.join(RESEARCH_DIR, 'reports')
+PUBLIC_MODELS_DIR = os.path.join(PROJECT_ROOT, 'public', 'models')
 
 def quantize_model():
     print("==================================================")
@@ -44,6 +45,12 @@ def quantize_model():
         weight_type=QuantType.QInt8
     )
     
+    # Copy quantized model to public/models for production frontend runtime
+    os.makedirs(PUBLIC_MODELS_DIR, exist_ok=True)
+    public_int8_path = os.path.join(PUBLIC_MODELS_DIR, 'mobilebert_context_int8.onnx')
+    shutil.copy2(int8_path, public_int8_path)
+    print(f"[+] Synced INT8 model to production asset: {public_int8_path}")
+    
     fp32_size_mb = os.path.getsize(fp32_path) / (1024 * 1024)
     int8_size_mb = os.path.getsize(int8_path) / (1024 * 1024)
     compression_ratio = (1 - int8_size_mb / fp32_size_mb) * 100
@@ -53,7 +60,7 @@ def quantize_model():
     
     # Load test dataset for empirical degradation audit
     test_df = pd.read_csv(os.path.join(DATA_DIR, 'multilabel_test.csv'))
-    tokenizer = SimpleWordPieceTokenizer()
+    tokenizer = get_real_tokenizer()
     
     # FP32 Session
     sess_fp32 = ort.InferenceSession(fp32_path, providers=['CPUExecutionProvider'])
@@ -65,9 +72,15 @@ def quantize_model():
     targets = test_df[LABEL_COLUMNS].values.astype(np.float32)
     
     for text in test_df['text']:
-        ids, mask = tokenizer.encode(text, 64)
-        input_ids_np = ids.unsqueeze(0).numpy()
-        attention_mask_np = mask.unsqueeze(0).numpy()
+        encoded = tokenizer(
+            str(text),
+            max_length=64,
+            padding='max_length',
+            truncation=True,
+            return_tensors='np'
+        )
+        input_ids_np = encoded['input_ids']
+        attention_mask_np = encoded['attention_mask']
         
         # FP32 Inference
         t0 = time.perf_counter()
@@ -95,10 +108,12 @@ def quantize_model():
     fp32_p50 = np.percentile(fp32_latencies, 50)
     int8_p50 = np.percentile(int8_latencies, 50)
     
+    retention = (int8_f1 / fp32_f1) if fp32_f1 > 0 else 1.0
+    
     print("\nQuantization Audit Summary:")
     print(f"  FP32: Size = {fp32_size_mb:.2f} MB | P50 Latency = {fp32_p50:.2f} ms | Micro-F1 = {fp32_f1:.4f}")
     print(f"  INT8: Size = {int8_size_mb:.2f} MB | P50 Latency = {int8_p50:.2f} ms | Micro-F1 = {int8_f1:.4f}")
-    print(f"  F1 Retention: {(int8_f1 / fp32_f1) * 100:.2f}% (Degradation: {abs(fp32_f1 - int8_f1):.4f})")
+    print(f"  F1 Retention: {retention * 100:.2f}% (Degradation: {abs(fp32_f1 - int8_f1):.4f})")
     
     return {
         'fp32_size_mb': fp32_size_mb,
@@ -107,7 +122,8 @@ def quantize_model():
         'fp32_p50': fp32_p50,
         'int8_p50': int8_p50,
         'fp32_f1': fp32_f1,
-        'int8_f1': int8_f1
+        'int8_f1': int8_f1,
+        'f1_retention': retention
     }
 
 if __name__ == '__main__':

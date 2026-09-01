@@ -5,6 +5,7 @@ import { SUPPORTED_LANGUAGES, LANGUAGE_LIST } from '../services/i18n/languages';
 import { getDecisionTranslation } from '../services/i18n/translations';
 import { voiceService } from '../services/voice/voiceService';
 import { IndiaFlag } from './IndiaFlag';
+import { ProceedPaymentModal } from './ProceedPaymentModal';
 
 interface CheckResultScreenProps {
   check: PaymentCheck;
@@ -22,6 +23,7 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
   const { language, bhashiniLocale, setLanguage, voiceAlertsEnabled, setVoiceAlertsEnabled, t, isTtsSupported } = useLanguage();
   const [showPrivacyAudit, setShowPrivacyAudit] = useState(false);
   const [showProtectedModal, setShowProtectedModal] = useState(false);
+  const [showProceedModal, setShowProceedModal] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showLangSelector, setShowLangSelector] = useState(false);
   const [voiceTelemetry, setVoiceTelemetry] = useState(() => voiceService.getTelemetry());
@@ -99,7 +101,7 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
   const currentLangInfo = SUPPORTED_LANGUAGES[language] || SUPPORTED_LANGUAGES.en;
 
   return (
-    <main className="flex-grow flex flex-col px-4 py-4 gap-5 pb-28 max-w-md mx-auto w-full">
+    <main className="flex-grow flex flex-col px-4 py-4 gap-5 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] max-w-md mx-auto w-full">
       {/* Accessible Live Region for Screen Readers */}
       <div
         className="sr-only"
@@ -191,6 +193,17 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
               <span className="material-symbols-outlined text-[16px]">do_not_disturb</span>
               <span>{decisionTranslation.actionBadge}</span>
             </div>
+
+            {/* Security Override & Proceed Link */}
+            <button
+              id="btn-proceed-override"
+              type="button"
+              onClick={() => setShowProceedModal(true)}
+              className="text-[11px] text-[#ffb4ab]/70 hover:text-[#ffb4ab] underline font-mono-data py-1 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[13px]">lock_open</span>
+              <span>Security Override & Proceed Anyway</span>
+            </button>
           </div>
         ) : isModerate ? (
           /* Amber Verify Card */
@@ -241,6 +254,17 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
               <span className="material-symbols-outlined text-[16px]">verified_user</span>
               <span>{decisionTranslation.actionBadge}</span>
             </div>
+
+            {/* Proceed with Caution Button */}
+            <button
+              id="btn-proceed-verify"
+              type="button"
+              onClick={() => setShowProceedModal(true)}
+              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.25)] cursor-pointer transition-all active:scale-98 mt-1"
+            >
+              <span className="material-symbols-outlined text-[18px]">verified_user</span>
+              <span>Proceed with Caution (I Verified Recipient)</span>
+            </button>
           </div>
         ) : (
           /* Calm Green Proceed Card */
@@ -291,6 +315,17 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
               <span className="material-symbols-outlined text-[16px]">check_circle</span>
               <span>{decisionTranslation.actionBadge}</span>
             </div>
+
+            {/* Prominent Glowing Proceed to Pay CTA */}
+            <button
+              id="btn-proceed-to-pay-primary"
+              type="button"
+              onClick={() => setShowProceedModal(true)}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#CCFF00] hover:bg-[#d8ff33] text-[#0A0A0A] font-bold text-sm uppercase tracking-wide flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(204,255,0,0.35)] cursor-pointer transition-all active:scale-98 mt-1"
+            >
+              <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+              <span>Proceed to Pay (₹{check.amount.toLocaleString()})</span>
+            </button>
           </div>
         )}
 
@@ -597,41 +632,67 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
           <div className="h-px w-full bg-[#444933]/30"></div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              id="btn-result-why"
-              onClick={onViewTrustChain}
-              className="flex-1 bg-[#2a2a2a] hover:bg-[#353534] text-[#e5e2e1] font-semibold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 border border-[#444933]/50 cursor-pointer"
-            >
-              <span>{t.voiceUi.whyButton}</span>
-              <span className="material-symbols-outlined text-[17px] text-[#c4c9ac]">
-                help
-              </span>
-            </button>
-
-            <button
-              id="btn-result-view-network"
-              onClick={onViewNetwork}
-              className="flex-1 bg-[#abd600] hover:bg-[#c3f400] text-[#161e00] font-bold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 uppercase tracking-wide cursor-pointer shadow-[0_0_15px_rgba(171,214,0,0.25)]"
-            >
-              <span className="material-symbols-outlined text-[17px]">
-                account_tree
-              </span>
-              <span>{t.voiceUi.networkButton}</span>
-            </button>
-
-            {onOpenAskAi && (
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
-                id="btn-result-voice-qa"
-                onClick={onOpenAskAi}
-                className="flex-1 bg-[#1e2f0d] hover:bg-[#283e12] text-[#abd600] border border-[#abd600]/40 font-bold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                id="btn-result-why"
+                onClick={onViewTrustChain}
+                className="flex-1 bg-[#2a2a2a] hover:bg-[#353534] text-[#e5e2e1] font-semibold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 border border-[#444933]/50 cursor-pointer"
+              >
+                <span>{t.voiceUi.whyButton}</span>
+                <span className="material-symbols-outlined text-[17px] text-[#c4c9ac]">
+                  help
+                </span>
+              </button>
+
+              <button
+                id="btn-result-view-network"
+                onClick={onViewNetwork}
+                className="flex-1 bg-[#abd600] hover:bg-[#c3f400] text-[#161e00] font-bold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 uppercase tracking-wide cursor-pointer shadow-[0_0_15px_rgba(171,214,0,0.25)]"
               >
                 <span className="material-symbols-outlined text-[17px]">
-                  mic
+                  account_tree
                 </span>
-                <span>{t.voiceUi.voiceQaButton}</span>
+                <span>{t.voiceUi.networkButton}</span>
               </button>
-            )}
+
+              {onOpenAskAi && (
+                <button
+                  id="btn-result-voice-qa"
+                  onClick={onOpenAskAi}
+                  className="flex-1 bg-[#1e2f0d] hover:bg-[#283e12] text-[#abd600] border border-[#abd600]/40 font-bold text-[14px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[17px]">
+                    mic
+                  </span>
+                  <span>{t.voiceUi.voiceQaButton}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Direct Proceed to Pay Button in Action Bar */}
+            <button
+              id="btn-result-proceed-bar"
+              onClick={() => setShowProceedModal(true)}
+              className={`w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
+                isHighRisk
+                  ? 'bg-[#2b1114] hover:bg-[#3d1317] text-[#ffb4ab] border border-[#ffb4ab]/30'
+                  : isModerate
+                  ? 'bg-[#2b1f0a] hover:bg-[#3d2b0e] text-amber-300 border border-amber-500/40'
+                  : 'bg-[#1e2f0d] hover:bg-[#283e12] text-[#abd600] border border-[#abd600]/40 shadow-sm'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {isHighRisk ? 'warning' : 'open_in_new'}
+              </span>
+              <span>
+                {isHighRisk
+                  ? 'Override & Proceed'
+                  : isModerate
+                  ? 'Proceed to Pay (Caution)'
+                  : 'Proceed to Pay via UPI'}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -783,6 +844,13 @@ export const CheckResultScreen: React.FC<CheckResultScreenProps> = ({
           </div>
         </div>
       )}
+
+      {/* PROCEED WITH PAYMENT MODAL */}
+      <ProceedPaymentModal
+        isOpen={showProceedModal}
+        onClose={() => setShowProceedModal(false)}
+        check={check}
+      />
     </main>
   );
 };

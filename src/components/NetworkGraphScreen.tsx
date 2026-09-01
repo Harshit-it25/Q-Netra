@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NETWORK_GRAPH_DATA } from '../data';
 import { NetworkNode, NetworkLink, PaymentCheck, ScreenType } from '../types';
 import { networkApi } from '../services/api/networkApi';
+import { buildGraphForEntity } from '../services/network/graphBuilder';
 
 interface NetworkGraphScreenProps {
   check?: PaymentCheck;
@@ -9,16 +10,26 @@ interface NetworkGraphScreenProps {
 }
 
 export const NetworkGraphScreen: React.FC<NetworkGraphScreenProps> = ({ check, onNavigate }) => {
-  const [nodes, setNodes] = useState<NetworkNode[]>(NETWORK_GRAPH_DATA.nodes);
-  const [links, setLinks] = useState<NetworkLink[]>(NETWORK_GRAPH_DATA.links);
-  const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(NETWORK_GRAPH_DATA.nodes[0]);
+  const initialGraph = check
+    ? buildGraphForEntity(check.recipient, check.riskLevel)
+    : NETWORK_GRAPH_DATA;
+
+  const [nodes, setNodes] = useState<NetworkNode[]>(initialGraph.nodes);
+  const [links, setLinks] = useState<NetworkLink[]>(initialGraph.links);
+  const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(initialGraph.nodes[0]);
   const [simulatingFlow, setSimulatingFlow] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!check) return;
 
-    // Fetch dynamic graph for current check target
+    // Build local dynamic graph immediately
+    const localGraph = buildGraphForEntity(check.recipient, check.riskLevel);
+    setNodes(localGraph.nodes);
+    setLinks(localGraph.links);
+    setSelectedNode(localGraph.nodes[0]);
+
+    // Attempt backend enrichment if reachable
     const fetchGraph = async () => {
       setLoading(true);
       try {
@@ -27,22 +38,9 @@ export const NetworkGraphScreen: React.FC<NetworkGraphScreenProps> = ({ check, o
           setNodes(data.nodes);
           setLinks(data.links);
           setSelectedNode(data.nodes[0]);
-        } else {
-          // Fallback to local default with updated target label
-          const updatedNodes = NETWORK_GRAPH_DATA.nodes.map((n) => 
-            n.id === 'target' ? { ...n, label: check.recipient } : n
-          );
-          setNodes(updatedNodes);
-          setLinks(NETWORK_GRAPH_DATA.links);
-          setSelectedNode(updatedNodes[0]);
         }
       } catch {
-        const updatedNodes = NETWORK_GRAPH_DATA.nodes.map((n) => 
-          n.id === 'target' ? { ...n, label: check.recipient } : n
-        );
-        setNodes(updatedNodes);
-        setLinks(NETWORK_GRAPH_DATA.links);
-        setSelectedNode(updatedNodes[0]);
+        // Local dynamic graph is already active
       } finally {
         setLoading(false);
       }
@@ -81,7 +79,7 @@ export const NetworkGraphScreen: React.FC<NetworkGraphScreenProps> = ({ check, o
   };
 
   return (
-    <main className="flex-grow flex flex-col p-4 max-w-4xl mx-auto w-full pb-28">
+    <main className="flex-grow flex flex-col p-4 max-w-4xl mx-auto w-full pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       {/* Investigative Handoff Banner */}
       <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">

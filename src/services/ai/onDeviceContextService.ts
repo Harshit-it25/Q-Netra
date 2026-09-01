@@ -1,6 +1,6 @@
 import { LocalPaymentContext } from '../../domain/payment/types';
 import { detectDeviceCapabilities } from '../device/deviceCapabilityService';
-import { analyzeContextLocally } from '../localAI/localAIService';
+import { analyzeContextLocally, analyzeContextLocallyAsync, LocalAIOptions } from '../localAI/localAIService';
 import { analyzeContextHeuristically } from '../localAI/heuristicContextService';
 
 /**
@@ -8,8 +8,12 @@ import { analyzeContextHeuristically } from '../localAI/heuristicContextService'
  * Routes to MobileBERT 25.3M local model with deterministic heuristic fallback.
  */
 
-export function analyzePaymentContextLocally(rawText: string): LocalPaymentContext {
-  return analyzeContextLocally(rawText);
+export function analyzePaymentContextLocally(rawText: string, options?: LocalAIOptions): LocalPaymentContext {
+  return analyzeContextLocally(rawText, options);
+}
+
+export async function analyzePaymentContextLocallyAsync(rawText: string, options?: LocalAIOptions): Promise<LocalPaymentContext> {
+  return analyzeContextLocallyAsync(rawText, options);
 }
 
 export function analyzePaymentContextHeuristically(rawText: string): LocalPaymentContext {
@@ -21,14 +25,14 @@ export function detectHardwareProfile() {
   return {
     isSnapdragon: cap.isSnapdragon,
     deviceModel: cap.platformDescription,
-    aiEngine: cap.executionEngine,
-    hardwarePlatform: cap.isSnapdragon ? 'Snapdragon platform detected' : 'Standard CPU Platform',
-    executionRuntime: cap.isSnapdragon ? 'On-device V8/JIT' : 'On-device V8/JIT',
-    runtimeMode: cap.isSnapdragon ? 'V8 JIT (Snapdragon CPU)' : 'V8 JIT (Standard CPU)',
+    aiEngine: 'ONNX Runtime Web (WASM/CPU)',
+    hardwarePlatform: cap.isSnapdragon ? 'Snapdragon Mobile Platform' : 'Standard CPU Platform',
+    executionRuntime: 'WebAssembly Execution Provider',
+    runtimeMode: 'ONNX WebAssembly',
     offlineCapable: true,
-    estimatedLatencyMs: 3
+    estimatedLatencyMs: 4
   };
 }
 
 export { analyzePaymentContextLocally as classifyPaymentContextLocally };
-
+export { analyzePaymentContextLocallyAsync as classifyPaymentContextLocallyAsync };

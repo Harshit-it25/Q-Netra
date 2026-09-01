@@ -41,49 +41,41 @@ const PRESET_QRS = [
   }
 ];
 
-export function parseUpiQrString(qrText: string): { vpa: string; amount: number; note?: string; isUrl?: boolean; rawUrl?: string } {
+import { parseUpiUri } from '../services/qr/upiParserService';
+
+export function parseUpiQrString(qrText: string): {
+  vpa: string;
+  amount: number;
+  note?: string;
+  payeeName?: string;
+  isUrl?: boolean;
+  rawUrl?: string;
+  merchantCode?: string;
+  isMerchant?: boolean;
+  bankName?: string;
+} {
   const trimmed = qrText.trim();
 
   // Check if this is an external HTTP/HTTPS URL instead of standard UPI
-  if (/^https?:\/\//i.test(trimmed) && !trimmed.includes('pa=')) {
+  if (/^https?:\/\//i.test(trimmed) && !trimmed.toLowerCase().includes('pa=')) {
     return {
       vpa: trimmed,
-      amount: 1000,
+      amount: 0,
       note: 'External web link scanned from QR',
       isUrl: true,
       rawUrl: trimmed
     };
   }
 
-  if (trimmed.startsWith('upi://') || trimmed.includes('pa=')) {
-    try {
-      const url = new URL(trimmed.startsWith('upi://') ? trimmed.replace('upi://pay', 'http://upi.org') : trimmed);
-      const pa = url.searchParams.get('pa') || '';
-      const am = url.searchParams.get('am') || '0';
-      const tn = url.searchParams.get('tn') || url.searchParams.get('pn') || undefined;
-      return {
-        vpa: pa || trimmed,
-        amount: parseFloat(am) > 0 ? parseFloat(am) : 1000,
-        note: tn ? decodeURIComponent(tn) : undefined,
-        isUrl: false
-      };
-    } catch {
-      const paMatch = trimmed.match(/pa=([^&]+)/);
-      const amMatch = trimmed.match(/am=([^&]+)/);
-      const tnMatch = trimmed.match(/tn=([^&]+)/);
-      return {
-        vpa: paMatch ? decodeURIComponent(paMatch[1]) : trimmed,
-        amount: amMatch && parseFloat(amMatch[1]) > 0 ? parseFloat(amMatch[1]) : 1000,
-        note: tnMatch ? decodeURIComponent(tnMatch[1]) : undefined,
-        isUrl: false
-      };
-    }
-  }
-
+  const parsed = parseUpiUri(trimmed);
   return {
-    vpa: trimmed,
-    amount: 1000,
-    note: undefined,
+    vpa: parsed.vpa && parsed.vpa !== 'unknown@upi' ? parsed.vpa : trimmed,
+    amount: parsed.amount,
+    note: parsed.note || (parsed.payeeName ? `Payment to ${parsed.payeeName}` : undefined),
+    payeeName: parsed.payeeName,
+    merchantCode: parsed.merchantCode,
+    isMerchant: parsed.isMerchant,
+    bankName: parsed.bankName,
     isUrl: false
   };
 }
@@ -161,7 +153,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
     
     // Quick micro-pause to render real security boundary state to the user
     setTimeout(() => {
-      onScanComplete(parsed.vpa, parsed.amount, parsed.note || 'Scanned UPI QR');
+      onScanComplete(parsed.vpa, parsed.amount, parsed.note);
       onClose();
     }, 450);
   };

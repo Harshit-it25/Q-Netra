@@ -3,6 +3,15 @@
   "parameters": "10,424,776",
   "architecture": "MobileBERT-Bottleneck (4-layer, 512-hidden, 128-bottleneck)",
   "quantization_target": "INT8",
+  "tokenizer": "google/mobilebert-uncased (WordPiece)",
+  "vocab_size": 30522,
+  "special_tokens": {
+    "pad": 0,
+    "unk": 100,
+    "cls": 101,
+    "sep": 102,
+    "mask": 103
+  },
   "classes": [
     "legitimate",
     "payment_request",

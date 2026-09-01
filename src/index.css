@@ -11,6 +11,10 @@
     --on-primary-container: #556d00;
     --error-color: #ffb4ab;
     --error-container: #93000a;
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
   }
 
   body {
@@ -18,7 +22,17 @@
     color: #e5e2e1;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+    padding-top: 0;
+    padding-bottom: 0;
   }
+}
+
+.safe-top-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .font-mono-data {

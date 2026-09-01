@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 export function securityHeadersMiddleware(req: Request, res: Response, next: NextFunction) {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: mediastream:; connect-src 'self' https://generativelanguage.googleapis.com https://dhruva-api.bhashini.gov.in https://fonts.googleapis.com https://fonts.gstatic.com data: blob:; worker-src 'self' blob:; frame-ancestors 'none'; object-src 'none';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: mediastream:; connect-src 'self' https://generativelanguage.googleapis.com https://dhruva-api.bhashini.gov.in https://fonts.googleapis.com https://fonts.gstatic.com data: blob:; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'none'; object-src 'none';"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');

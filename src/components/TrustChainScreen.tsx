@@ -88,7 +88,7 @@ export const TrustChainScreen: React.FC<TrustChainScreenProps> = ({
   ];
 
   return (
-    <main className="flex-grow p-4 md:p-6 max-w-2xl mx-auto w-full pb-28">
+    <main className="flex-grow p-4 md:p-6 max-w-2xl mx-auto w-full pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       {/* Top Navigation & Title */}
       <div className="mb-4">
         <button

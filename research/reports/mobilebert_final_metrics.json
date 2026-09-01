@@ -1,0 +1,256 @@
+{
+  "evaluation_dataset": "multilabel_test.csv",
+  "test_samples_count": 103,
+  "tokenizer": "google/mobilebert-uncased (WordPiece 30522)",
+  "quantization_format": "INT8 (Dynamic)",
+  "aggregate_metrics_int8": {
+    "micro_precision": 0.9930555555555556,
+    "micro_recall": 1.0,
+    "micro_f1": 0.9965156794425087,
+    "macro_precision": 0.9895833333333333,
+    "macro_recall": 1.0,
+    "macro_f1": 0.9945652173913043
+  },
+  "aggregate_metrics_fp32": {
+    "micro_precision": 0.9930555555555556,
+    "micro_recall": 1.0,
+    "micro_f1": 0.9965156794425087,
+    "macro_precision": 0.9895833333333333,
+    "macro_recall": 1.0,
+    "macro_f1": 0.9945652173913043
+  },
+  "f1_retention_ratio": 1.0,
+  "per_label_metrics_int8": {
+    "legitimate": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0000000000000002,
+      "support": 48,
+      "confusion_matrix": {
+        "true_negative": 55,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 48
+      }
+    },
+    "payment_request": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 0.9999999999999999,
+      "support": 88,
+      "confusion_matrix": {
+        "true_negative": 15,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 88
+      }
+    },
+    "urgency": {
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1": 0.9565217391304348,
+      "pr_auc": 0.9926436641483215,
+      "support": 33,
+      "confusion_matrix": {
+        "true_negative": 67,
+        "false_positive": 3,
+        "false_negative": 0,
+        "true_positive": 33
+      }
+    },
+    "payment_pressure": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 0.9999999999999998,
+      "support": 31,
+      "confusion_matrix": {
+        "true_negative": 72,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 31
+      }
+    },
+    "authority_impersonation": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 82,
+      "confusion_matrix": {
+        "true_negative": 21,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 82
+      }
+    },
+    "phishing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 0.9999999999999996,
+      "support": 37,
+      "confusion_matrix": {
+        "true_negative": 66,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 37
+      }
+    },
+    "social_engineering": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 55,
+      "confusion_matrix": {
+        "true_negative": 48,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 55
+      }
+    },
+    "fraud": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 55,
+      "confusion_matrix": {
+        "true_negative": 48,
+        "false_positive": 0,
+        "false_negative": 0,
+        "true_positive": 55
+      }
+    }
+  },
+  "per_label_metrics_fp32": {
+    "legitimate": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0000000000000002,
+      "support": 48
+    },
+    "payment_request": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 88
+    },
+    "urgency": {
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1": 0.9565217391304348,
+      "pr_auc": 0.9926436641483215,
+      "support": 33
+    },
+    "payment_pressure": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 0.9999999999999998,
+      "support": 31
+    },
+    "authority_impersonation": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 82
+    },
+    "phishing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 0.9999999999999996,
+      "support": 37
+    },
+    "social_engineering": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 55
+    },
+    "fraud": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "pr_auc": 1.0,
+      "support": 55
+    }
+  },
+  "discrepancy_samples": [
+    {
+      "index": 51,
+      "text": "Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee \u20b925 to coordinator UPI kbc.tax@ybl.",
+      "expected_labels": [
+        "payment_request",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "predicted_labels": [
+        "payment_request",
+        "urgency",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "false_positives": [
+        "urgency"
+      ],
+      "false_negatives": []
+    },
+    {
+      "index": 65,
+      "text": "Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee \u20b92500 to coordinator UPI disconnection.officer@sbi.",
+      "expected_labels": [
+        "payment_request",
+        "payment_pressure",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "predicted_labels": [
+        "payment_request",
+        "urgency",
+        "payment_pressure",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "false_positives": [
+        "urgency"
+      ],
+      "false_negatives": []
+    },
+    {
+      "index": 70,
+      "text": "Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee \u20b91500 to coordinator UPI customs.fine@okhdfc.",
+      "expected_labels": [
+        "payment_request",
+        "payment_pressure",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "predicted_labels": [
+        "payment_request",
+        "urgency",
+        "payment_pressure",
+        "authority_impersonation",
+        "social_engineering",
+        "fraud"
+      ],
+      "false_positives": [
+        "urgency"
+      ],
+      "false_negatives": []
+    }
+  ]
+}

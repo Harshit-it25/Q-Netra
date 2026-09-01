@@ -22,6 +22,7 @@ export interface PaymentCheck {
   storyCorrelation?: IntentTrailCorrelation;
   trustChain: TrustChainStep[];
   aiExplanation?: string;
+  graphSummary?: any;
 }
 
 export interface LocalPaymentContext {

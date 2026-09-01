@@ -7,6 +7,28 @@ export interface ApiClientOptions extends RequestInit {
   timeoutMs?: number;
 }
 
+/**
+ * Returns the configured API base URL (Production backend in production/APK, relative in local dev).
+ */
+export function getApiBaseUrl(): string {
+  // Vite environment variable
+  const meta = import.meta as any;
+  const envUrl = typeof meta !== 'undefined' && meta.env ? meta.env.VITE_API_BASE_URL : undefined;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim() !== '') {
+    return envUrl.replace(/\/+$/, '');
+  }
+  return '';
+}
+
+export function buildFullApiUrl(endpoint: string): string {
+  if (/^https?:\/\//i.test(endpoint)) {
+    return endpoint;
+  }
+  const base = getApiBaseUrl();
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return base ? `${base}${path}` : path;
+}
+
 export class ApiError extends Error {
   status: number;
   data?: any;
@@ -24,12 +46,13 @@ export async function apiRequest<T>(
   options: ApiClientOptions = {}
 ): Promise<T> {
   const { timeoutMs = 12000, ...fetchOptions } = options;
+  const targetUrl = buildFullApiUrl(url);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(targetUrl, {
       ...fetchOptions,
       signal: controller.signal,
       headers: {

@@ -1,61 +1,41 @@
 {
-  "model": "MobileBERT-Context-Classifier",
-  "parameters": "25.3M",
-  "quantization": "INT8",
-  "modelSizeBytes": 10708236,
-  "modelSizeMb": 10.21,
-  "loadTimeMs": 72.97,
-  "warmupRuns": 100,
-  "measuredRuns": 100,
-  "environment": {
-    "platform": "win32",
-    "backend": "CPUExecutionProvider (ONNX Runtime)"
-  },
-  "breakdown": {
+  "model_name": "MobileBERT-Context-Classifier-INT8",
+  "tokenizer": "google/mobilebert-uncased (WordPiece)",
+  "vocab_size": 30522,
+  "model_size_mb": 10.21,
+  "execution_provider": "CPUExecutionProvider",
+  "cold_start_load_ms": 114.81,
+  "warmup_runs": 100,
+  "measured_runs": 100,
+  "stage_breakdown_ms": {
     "tokenization": {
-      "min": 0.007200054824352264,
-      "mean": 0.013335996773093939,
-      "std": 0.007886758468685877,
-      "p50": 0.011199997970834374,
-      "p95": 0.024560009478591344,
-      "p99": 0.03953200823161763,
-      "max": 0.06250001024454832
+      "mean": 0.166,
+      "p50": 0.137,
+      "p95": 0.343
     },
-    "tensorPrep": {
-      "min": 0.004900037311017513,
-      "mean": 0.009305000421591103,
-      "std": 0.006396362447070307,
-      "p50": 0.0071499962359666824,
-      "p95": 0.030610000248998404,
-      "p99": 0.03291801782324911,
-      "max": 0.03470003139227629
+    "tensor_prep": {
+      "mean": 0.209,
+      "p50": 0.151,
+      "p95": 0.495
     },
-    "rawInference": {
-      "min": 2.2462999913841486,
-      "mean": 2.6982310018502176,
-      "std": 0.4351015167441628,
-      "p50": 2.537549997214228,
-      "p95": 3.701189992716536,
-      "p99": 3.9316810091259002,
-      "max": 4.8108999617397785
+    "raw_onnx_inference": {
+      "mean": 4.555,
+      "p50": 3.95,
+      "p95": 7.335
     },
-    "postProcessing": {
-      "min": 0.009599956683814526,
-      "mean": 0.027278000488877296,
-      "std": 0.01848677077222641,
-      "p50": 0.021400017431005836,
-      "p95": 0.06673998432233928,
-      "p99": 0.09859599231276671,
-      "max": 0.11799996718764305
-    },
-    "endToEnd": {
-      "min": 2.274200029205531,
-      "mean": 2.74814999953378,
-      "std": 0.4484927778064517,
-      "p50": 2.576350001618266,
-      "p95": 3.748095000628382,
-      "p99": 3.9771390019450386,
-      "max": 4.921500047203153
+    "post_processing": {
+      "mean": 0.036,
+      "p50": 0.031,
+      "p95": 0.072
     }
+  },
+  "end_to_end_latency_ms": {
+    "minimum": 3.19,
+    "mean": 4.97,
+    "std": 1.49,
+    "p50": 4.3,
+    "p95": 7.95,
+    "p99": 8.33,
+    "maximum": 8.33
   }
 }

@@ -8,12 +8,16 @@ interface HeaderProps {
   currentScreen: ScreenType;
   onNavigate: (screen: ScreenType) => void;
   onOpenMenu?: () => void;
+  onOpenBenchmark?: () => void;
+  onOpenOfflineDiagnostics?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentScreen,
   onNavigate,
-  onOpenMenu
+  onOpenMenu,
+  onOpenBenchmark,
+  onOpenOfflineDiagnostics
 }) => {
   const { language, setLanguage, t } = useLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -67,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   if (currentScreen === 'home') {
     return (
-      <header className="bg-[#131313] w-full top-0 sticky border-b border-[#444933]/50 flex items-center justify-between px-4 h-16 z-40">
+      <header className="bg-[#131313] w-full top-0 sticky border-b border-[#444933]/50 flex items-center justify-between px-4 pt-[env(safe-area-inset-top,0px)] h-[calc(4rem+env(safe-area-inset-top,0px))] z-40">
         <button
           id="btn-header-shield"
           onClick={() => onNavigate('settings')}
@@ -81,8 +85,28 @@ export const Header: React.FC<HeaderProps> = ({
           Q-NETRA AI
         </h1>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {renderLanguagePicker()}
+          {onOpenOfflineDiagnostics && (
+            <button
+              id="btn-header-offline-diag"
+              onClick={onOpenOfflineDiagnostics}
+              className="text-[#c4c9ac] hover:text-[#abd600] hover:bg-[#2a2a2a] transition-colors active:scale-95 duration-100 p-2 rounded-full flex items-center justify-center cursor-pointer"
+              title="Offline Mode Diagnostics & Assertions"
+            >
+              <span className="material-symbols-outlined text-[22px]">offline_pin</span>
+            </button>
+          )}
+          {onOpenBenchmark && (
+            <button
+              id="btn-header-benchmark"
+              onClick={onOpenBenchmark}
+              className="text-[#c4c9ac] hover:text-[#abd600] hover:bg-[#2a2a2a] transition-colors active:scale-95 duration-100 p-2 rounded-full flex items-center justify-center cursor-pointer"
+              title="Snapdragon Benchmark & Hardware Diagnostics"
+            >
+              <span className="material-symbols-outlined text-[22px]">speed</span>
+            </button>
+          )}
           <button
             id="btn-header-menu"
             onClick={onOpenMenu}
@@ -98,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Transactional / Sub-screen Header
   return (
-    <header className="w-full top-0 sticky z-40 bg-[#131313] border-b border-[#444933]/40 h-16 flex items-center justify-between px-4">
+    <header className="w-full top-0 sticky z-40 bg-[#131313] border-b border-[#444933]/40 pt-[env(safe-area-inset-top,0px)] h-[calc(4rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
         <button
           id="btn-header-back"

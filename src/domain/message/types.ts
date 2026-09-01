@@ -41,4 +41,10 @@ export interface SmsAnalysisItem {
   hasShortlink: boolean;
   hasUrgency: boolean;
   threatDescription?: string;
+  urlInfo?: {
+    hasUrl: boolean;
+    url?: string;
+    isApk: boolean;
+    isShortened: boolean;
+  };
 }

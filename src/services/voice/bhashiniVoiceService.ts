@@ -4,6 +4,7 @@
  */
 
 import { LanguageCode } from './languagePreferenceService';
+import { buildFullApiUrl } from '../api/apiClient';
 
 export interface BhashiniTtsResult {
   success: boolean;
@@ -42,7 +43,7 @@ export class BhashiniVoiceService {
     this.stopAudio();
 
     try {
-      const response = await fetch('/api/voice/synthesize', {
+      const response = await fetch(buildFullApiUrl('/api/voice/synthesize'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -176,7 +177,7 @@ export class BhashiniVoiceService {
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
           const base64Audio = await this.blobToBase64(audioBlob);
 
-          const response = await fetch('/api/voice/transcribe', {
+          const response = await fetch(buildFullApiUrl('/api/voice/transcribe'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

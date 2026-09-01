@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="dark" lang="en">
+<html class="dark" lang="en" style="background-color: #0A0A0A; color: #e5e2e1;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -17,18 +17,49 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        background-color: #0A0A0A !important;
+        color: #e5e2e1 !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+    </style>
   </head>
-  <body class="bg-[#0A0A0A] text-[#e5e2e1] antialiased selection:bg-[#c3f400] selection:text-[#161e00]">
+  <body class="bg-[#0A0A0A] text-[#e5e2e1] antialiased selection:bg-[#c3f400] selection:text-[#161e00]" style="background-color: #0A0A0A; color: #e5e2e1;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Production Service Worker Registration & Cache Resilience
       if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((err) => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            reg.update().catch(() => {});
+          }).catch((err) => {
             console.warn('SW registration bypassed:', err);
           });
         });
       }
+
+      // Emergency Failsafe: If React fails to mount or chunk fails to load due to stale cache
+      window.addEventListener('error', function(event) {
+        var root = document.getElementById('root');
+        if (root && root.children.length === 0) {
+          if (event.message && (event.message.indexOf('Loading chunk') !== -1 || event.message.indexOf('Failed to fetch') !== -1 || event.message.indexOf('MIME') !== -1)) {
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                names.forEach(function(name) { caches.delete(name); });
+              });
+            }
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                regs.forEach(function(r) { r.unregister(); });
+              });
+            }
+          }
+        }
+      });
     </script>
   </body>
 </html>

@@ -10,9 +10,13 @@ import { QrScannerModal } from './components/QrScannerModal';
 import { CheckMessageModal } from './components/CheckMessageModal';
 import { EnterPaymentModal } from './components/EnterPaymentModal';
 import { AskQNetraModal } from './components/AskQNetraModal';
+import { DeviceBenchmarkModal } from './components/DeviceBenchmarkModal';
+import { OfflineDiagnosticsModal } from './components/OfflineDiagnosticsModal';
 import { PaymentCheck, ScreenType, LocalPaymentContext } from './types';
-import { classifyPaymentContextLocally } from './lib/onDeviceAI';
-import { paymentApi } from './services/api/paymentApi';
+import { classifyPaymentContextLocally, classifyPaymentContextLocallyAsync } from './lib/onDeviceAI';
+import { evaluatePaymentRiskLocally } from './services/payment/clientRiskEvaluator';
+import { modelLoader } from './services/localAI/modelLoader';
+import { networkTracker } from './services/network/networkActivityTracker';
 import {
   loadPaymentHistory,
   savePaymentHistory,
@@ -21,8 +25,17 @@ import {
 } from './lib/paymentHistory';
 import { LanguageProvider } from './services/i18n/LanguageContext';
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
-  constructor(props: { children: React.ReactNode }) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -82,7 +95,14 @@ function AppContent() {
   const [isCheckMessageOpen, setIsCheckMessageOpen] = useState(false);
   const [isEnterPaymentOpen, setIsEnterPaymentOpen] = useState(false);
   const [isAskAiOpen, setIsAskAiOpen] = useState(false);
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
+  const [isOfflineDiagOpen, setIsOfflineDiagOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    networkTracker.init();
+    modelLoader.initialize().catch(console.warn);
+  }, []);
 
   useEffect(() => {
     savePaymentHistory(checks);
@@ -93,53 +113,29 @@ function AppContent() {
     setCurrentScreen('check-result');
   };
 
+  /**
+   * 100% On-Device Payment Risk Evaluation Pipeline (Zero Server Dependency)
+   * Executes local context analysis (MobileBERT INT8) -> Feature engine -> RiskGraph -> 5-stage Trust Chain
+   */
   const handlePaymentAnalysis = async (recipient: string, amount: number, note?: string) => {
     setIsAnalyzing(true);
     
-    // Step 1: Real on-device AI context classification (Runs immediately on the client)
+    // Step 1: Real on-device AI context classification (MobileBERT INT8 or Heuristic fallback)
     const rawContextText = [note, recipient].filter(Boolean).join(' ');
-    const localContext: LocalPaymentContext = classifyPaymentContextLocally(rawContextText);
-
+    let localContext: LocalPaymentContext;
     try {
-      // Step 2: Transmit structured context + recipient to backend
-      const data = await paymentApi.analyzePayment({
-        recipient,
-        amount,
-        note,
-        context: localContext
-      });
-
-      if (data.success) {
-        const newCheck: PaymentCheck = {
-          id: `chk-${Date.now()}`,
-          recipient: data.recipient,
-          amount: data.amount,
-          date: 'Just now',
-          timestamp: Date.now(),
-          riskLevel: data.riskLevel,
-          stopDecision: data.stopDecision,
-          headline: data.headline,
-          stopReason: data.stopReason,
-          connectedEntities: data.connectedEntities,
-          elevatedRiskConnections: data.elevatedRiskConnections,
-          riskTags: data.riskTags,
-          note,
-          localContext: data.localContext || localContext,
-          trustChain: data.trustChain,
-          aiExplanation: data.aiExplanation
-        };
-
-        setChecks((prev) => [newCheck, ...prev]);
-        setSelectedCheck(newCheck);
-        setCurrentScreen('check-result');
-      } else {
-        createFallbackCheck(recipient, amount, note, localContext);
-      }
+      localContext = await classifyPaymentContextLocallyAsync(rawContextText);
     } catch {
-      createFallbackCheck(recipient, amount, note, localContext);
-    } finally {
-      setIsAnalyzing(false);
+      localContext = classifyPaymentContextLocally(rawContextText);
     }
+
+    // Step 2: 100% On-Device Risk Engine & Trust Chain Synthesis using current + historical local signals
+    const newCheck = evaluatePaymentRiskLocally(recipient, amount, note, localContext, checks);
+
+    setChecks((prev) => [newCheck, ...prev]);
+    setSelectedCheck(newCheck);
+    setCurrentScreen('check-result');
+    setIsAnalyzing(false);
   };
 
   const handleDeletePayment = (id: string) => {
@@ -158,85 +154,6 @@ function AppContent() {
     setCurrentScreen('home');
   };
 
-  const createFallbackCheck = (recipient: string, amount: number, note?: string, localCtx?: LocalPaymentContext) => {
-    const localContext = localCtx || classifyPaymentContextLocally([note, recipient].filter(Boolean).join(' '));
-    const isHigh =
-      recipient.toLowerCase().includes('abc') ||
-      recipient.toLowerCase().includes('refund') ||
-      recipient.toLowerCase().includes('lottery') ||
-      recipient.toLowerCase().includes('disconnection') ||
-      amount >= 20000 ||
-      localContext.payment_pressure ||
-      localContext.authority_claim;
-
-    // FAIL-SAFE PRINCIPLE: Never show SAFE merely because backend was unreachable.
-    const riskLevel: 'HIGH RISK' | 'MODERATE' = isHigh ? 'HIGH RISK' : 'MODERATE';
-    const stopDecision = isHigh;
-
-    const newCheck: PaymentCheck = {
-      id: `chk-${Date.now()}`,
-      recipient,
-      amount,
-      date: 'Just now (Offline Mode)',
-      timestamp: Date.now(),
-      riskLevel,
-      stopDecision,
-      headline: isHigh
-        ? "The payment looks normal. The network behind it doesn't."
-        : "Recipient / network verification unavailable (Offline Mode)",
-      stopReason: isHigh
-        ? 'Transaction halted based on on-device threat classification.'
-        : 'Network verification unavailable. Local AI analyzed context on-device, but cloud risk graph could not be queried. Verify recipient before sending funds.',
-      connectedEntities: isHigh ? 7 : 0,
-      elevatedRiskConnections: isHigh ? 3 : 0,
-      riskTags: isHigh
-        ? ['Payment pressure detected (Local AI)', 'Threat Pattern Flagged', 'Offline Guard Active']
-        : ['Offline Fallback', 'Network Check Unavailable', 'Unverified Counterparty'],
-      note,
-      localContext,
-      trustChain: [
-        {
-          stage: 'Payment Request',
-          status: isHigh ? 'Payment pressure detected' : 'Standard organic request',
-          level: isHigh ? 'error' : 'safe',
-          icon: isHigh ? 'warning' : 'check_circle',
-          detail: `On-Device AI (${localContext.inference_engine}, ${localContext.latency_ms}ms): ${
-            localContext.payment_pressure
-              ? `Threat indicators: ${localContext.threat_indicators.join(', ') || 'Pressure detected'}`
-              : 'Clean organic transaction intent verified on-device.'
-          }`
-        },
-        {
-          stage: 'Recipient',
-          status: recipient,
-          level: 'warning',
-          icon: 'person',
-          detail: 'Recipient network verification unavailable (Device is offline or backend unreachable).'
-        },
-        {
-          stage: 'Network',
-          status: 'Network verification unavailable',
-          level: 'warning',
-          icon: 'hub',
-          detail: 'Cloud Graph Neural Engine could not be reached. Local fail-safe mode active.'
-        },
-        {
-          stage: 'Risk Pattern',
-          status: isHigh ? 'Suspicious pattern detected locally' : 'Unverified offline baseline',
-          level: isHigh ? 'error' : 'warning',
-          icon: isHigh ? 'pattern' : 'help',
-          detail: isHigh
-            ? 'On-device classifier flagged coercive or phishing signatures.'
-            : 'Caution: Offline checks cannot confirm historical counterparties or mule links.'
-        }
-      ]
-    };
-
-    setChecks((prev) => [newCheck, ...prev]);
-    setSelectedCheck(newCheck);
-    setCurrentScreen('check-result');
-  };
-
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col selection:bg-[#c3f400] selection:text-[#161e00] font-['Inter'] relative">
       {/* Top Header */}
@@ -244,6 +161,8 @@ function AppContent() {
         currentScreen={currentScreen}
         onNavigate={setCurrentScreen}
         onOpenMenu={() => setIsAskAiOpen(true)}
+        onOpenBenchmark={() => setIsBenchmarkOpen(true)}
+        onOpenOfflineDiagnostics={() => setIsOfflineDiagOpen(true)}
       />
 
       {/* Screen Views */}
@@ -290,6 +209,8 @@ function AppContent() {
           <SettingsScreen
             onNavigate={setCurrentScreen}
             onResetDemo={handleResetDemoState}
+            onOpenBenchmark={() => setIsBenchmarkOpen(true)}
+            onOpenOfflineDiagnostics={() => setIsOfflineDiagOpen(true)}
           />
         )}
       </div>
@@ -322,15 +243,25 @@ function AppContent() {
         activeCheck={selectedCheck || checks[0]}
       />
 
+      <DeviceBenchmarkModal
+        isOpen={isBenchmarkOpen}
+        onClose={() => setIsBenchmarkOpen(false)}
+      />
+
+      <OfflineDiagnosticsModal
+        isOpen={isOfflineDiagOpen}
+        onClose={() => setIsOfflineDiagOpen(false)}
+      />
+
       {/* Fullscreen Analyzing Overlay */}
       {isAnalyzing && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
           <div className="w-16 h-16 rounded-2xl bg-[rgba(171,214,0,0.15)] border border-[#abd600]/40 flex items-center justify-center text-[#abd600] animate-pulse mb-4">
             <span className="material-symbols-outlined text-[32px] animate-spin">sync</span>
           </div>
-          <h3 className="text-lg font-bold text-[#e5e2e1]">Q-NETRA AI Neural Scan</h3>
+          <h3 className="text-lg font-bold text-[#e5e2e1]">Q-NETRA AI On-Device Scan</h3>
           <p className="text-xs text-[#c4c9ac] font-mono-data mt-1">
-            Analyzing multi-hop money laundering risk & trust chain...
+            Analyzing multi-hop money laundering risk & trust chain locally...
           </p>
         </div>
       )}

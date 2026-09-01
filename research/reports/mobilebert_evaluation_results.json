@@ -1,0 +1,177 @@
+{
+  "tokenizer": "google/mobilebert-uncased (WordPiece)",
+  "vocab_size": 30522,
+  "test_set_size": 103,
+  "models_summary": [
+    {
+      "model": "Current Heuristic Safety Engine",
+      "params": "0 (Rule/Regex)",
+      "size": "< 15 KB",
+      "precision": 0.9276485788113695,
+      "recall": 0.8368298368298368,
+      "f1": 0.8799019607843137,
+      "f1_ci": [
+        0.8524507991289699,
+        0.9015677992669733
+      ],
+      "p50_lat": "0.06 ms",
+      "p95_lat": "0.08 ms",
+      "backend": "Client V8 JIT / CPU",
+      "offline": "YES"
+    },
+    {
+      "model": "Logistic Regression",
+      "params": "~0.2M",
+      "size": "~1.2 MB",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_ci": [
+        1.0,
+        1.0
+      ],
+      "p50_lat": "1.5 ms",
+      "p95_lat": "2.4 ms",
+      "backend": "CPU (Scikit-Learn)",
+      "offline": "YES"
+    },
+    {
+      "model": "Random Forest",
+      "params": "~0.2M",
+      "size": "~1.2 MB",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_ci": [
+        1.0,
+        1.0
+      ],
+      "p50_lat": "1.5 ms",
+      "p95_lat": "2.4 ms",
+      "backend": "CPU (Scikit-Learn)",
+      "offline": "YES"
+    },
+    {
+      "model": "LightGBM",
+      "params": "~0.2M",
+      "size": "~1.2 MB",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_ci": [
+        1.0,
+        1.0
+      ],
+      "p50_lat": "1.5 ms",
+      "p95_lat": "2.4 ms",
+      "backend": "CPU (Scikit-Learn)",
+      "offline": "YES"
+    },
+    {
+      "model": "XGBoost",
+      "params": "~0.2M",
+      "size": "~1.2 MB",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "f1_ci": [
+        1.0,
+        1.0
+      ],
+      "p50_lat": "1.5 ms",
+      "p95_lat": "2.4 ms",
+      "backend": "CPU (Scikit-Learn)",
+      "offline": "YES"
+    },
+    {
+      "model": "MobileBERT FP32 (Local Transformer)",
+      "params": "10.4M",
+      "size": "39.9 MB",
+      "precision": 0.9907621247113164,
+      "recall": 1.0,
+      "f1": 0.9953596287703016,
+      "f1_ci": [
+        0.9888143176733781,
+        1.0
+      ],
+      "p50_lat": "48.43 ms",
+      "p95_lat": "131.12 ms",
+      "backend": "CPU (PyTorch)",
+      "offline": "YES"
+    },
+    {
+      "model": "MobileBERT INT8 (ONNX Runtime WASM/CPU)",
+      "params": "10.4M (Quantized)",
+      "size": "10.2 MB",
+      "precision": 0.9930555555555556,
+      "recall": 1.0,
+      "f1": 0.9965156794425087,
+      "f1_ci": [
+        0.9918694454697748,
+        1.0
+      ],
+      "p50_lat": "7.98 ms",
+      "p95_lat": "9.33 ms",
+      "backend": "ONNX Runtime Web (WASM/CPU)",
+      "offline": "YES"
+    }
+  ],
+  "per_class_metrics": [
+    {
+      "class": "LEGITIMATE",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 48
+    },
+    {
+      "class": "PAYMENT_REQUEST",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 88
+    },
+    {
+      "class": "URGENCY",
+      "precision": 0.9166666666666666,
+      "recall": 1.0,
+      "f1": 0.9565217391304348,
+      "support": 33
+    },
+    {
+      "class": "PAYMENT_PRESSURE",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 31
+    },
+    {
+      "class": "AUTHORITY_IMPERSONATION",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 82
+    },
+    {
+      "class": "PHISHING",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 37
+    },
+    {
+      "class": "SOCIAL_ENGINEERING",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 55
+    },
+    {
+      "class": "FRAUD",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 55
+    }
+  ]
+}

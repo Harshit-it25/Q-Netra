@@ -90,7 +90,13 @@ export function analyzeSmsLocally(
     hasApk: linkSafety.isApkDownload,
     hasShortlink: linkSafety.isShortLink,
     hasUrgency: context.urgency,
-    threatDescription: linkSafety.threatDescription
+    threatDescription: linkSafety.threatDescription,
+    urlInfo: {
+      hasUrl: linkSafety.hasUrl,
+      url: linkSafety.urlsFound[0] || (linkSafety.isShortLink ? 'Shortened Link Detected' : undefined),
+      isApk: linkSafety.isApkDownload,
+      isShortened: linkSafety.isShortLink
+    }
   };
 }
 

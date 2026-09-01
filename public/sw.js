@@ -1,24 +1,15 @@
 /**
- * Q-NETRA AI — PWA Service Worker (Cache-Safe Edition)
+ * Q-NETRA AI — PWA Service Worker (Resilient Edition)
  * 
  * Strict Privacy & Freshness Rules:
- * - Only static core application shell is cached.
+ * - Navigation (HTML) ALWAYS fetches fresh over the network to prevent outdated JS chunk hash collisions.
  * - Dynamic /api/* routes (payment evaluations, risk graphs, forensic dossiers) are NEVER cached.
+ * - Stale caches are purged on activation.
  */
 
-const CACHE_NAME = 'qnetra-static-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+const CACHE_NAME = 'qnetra-static-v2';
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -40,13 +31,22 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // PRIVACY & SAFETY GUARD: NEVER cache dynamic API risk/payment/investigation requests
+  // 1. PRIVACY GUARD: NEVER cache dynamic API calls
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(event.request));
     return;
   }
 
-  // Network-first strategy for navigation and static assets
+  // 2. FRESHNESS GUARD: HTML Navigation MUST always fetch fresh over network
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html');
+      })
+    );
+    return;
+  }
+
+  // 3. Static assets: Network first, with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -63,3 +63,4 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+

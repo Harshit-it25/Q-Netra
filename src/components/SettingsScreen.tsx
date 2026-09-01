@@ -9,9 +9,16 @@ import { modelLoader } from '../services/localAI/modelLoader';
 interface SettingsScreenProps {
   onNavigate: (screen: ScreenType) => void;
   onResetDemo?: () => void;
+  onOpenBenchmark?: () => void;
+  onOpenOfflineDiagnostics?: () => void;
 }
 
-export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onResetDemo }) => {
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({
+  onNavigate,
+  onResetDemo,
+  onOpenBenchmark,
+  onOpenOfflineDiagnostics
+}) => {
   const { language, setLanguage, voiceAlertsEnabled, setVoiceAlertsEnabled, t, isTtsSupported } = useLanguage();
   const [realTimeClipboard, setRealTimeClipboard] = useState(true);
   const [onDeviceAnalysis, setOnDeviceAnalysis] = useState(true);
@@ -34,7 +41,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onRe
   };
 
   return (
-    <main className="flex-grow p-4 md:p-6 max-w-2xl mx-auto w-full pb-28">
+    <main className="flex-grow p-4 md:p-6 max-w-2xl mx-auto w-full pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
       {/* Title */}
       <div className="mb-6">
         <h2 className="text-[24px] font-bold text-[#e5e2e1] mb-1 font-['Inter']">
@@ -261,6 +268,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onRe
               <span className="text-[#c4c9ac] font-medium">{aiStatus.fallback}</span>
             </div>
           </div>
+
+          {onOpenBenchmark && (
+            <button
+              onClick={onOpenBenchmark}
+              className="bg-[#1f2910] hover:bg-[#2b3a16] border border-[#abd600]/40 text-[#abd600] font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[18px]">speed</span>
+              <span>Snapdragon Device Benchmark & Latency Profiler</span>
+            </button>
+          )}
         </div>
 
         {/* SMS Shield Section (User Controlled & Optional) */}
@@ -310,25 +327,43 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onRe
         <div className="bg-[#171717] border border-[#383838] rounded-2xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#abd600]">restart_alt</span>
+              <span className="material-symbols-outlined text-[#abd600]">offline_pin</span>
               <h3 className="text-sm font-bold text-[#e5e2e1]">
-                Deterministic Demo Controls
+                Offline Mode Diagnostics & Benchmark
               </h3>
             </div>
-            <span className="text-[10px] font-mono-data bg-[#242424] text-[#c4c9ac] px-2 py-0.5 rounded">
-              Phase 5 Verified
+            <span className="text-[10px] font-mono-data bg-[#242424] text-[#abd600] px-2 py-0.5 rounded border border-[#abd600]/30">
+              100% On-Device
             </span>
           </div>
           <p className="text-xs text-[#c4c9ac] leading-relaxed">
-            Instantly restore clean evaluation state for the <strong>3 Golden Demo Scenarios</strong> (Case A: Proceed, Case B: Verify, Case C: Stop) without manual database edits or terminal restarts.
+            Verify zero-network execution, MobileBERT INT8 integrity, WordPiece tokenizer status, and run the 6-case offline test matrix or 100-run latency profiler.
           </p>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex flex-wrap items-center gap-2.5 mt-1">
+            {onOpenOfflineDiagnostics && (
+              <button
+                onClick={onOpenOfflineDiagnostics}
+                className="bg-[#abd600] hover:bg-[#c3f400] text-black font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">offline_pin</span>
+                <span>Open Offline Diagnostics</span>
+              </button>
+            )}
+            {onOpenBenchmark && (
+              <button
+                onClick={onOpenBenchmark}
+                className="bg-[#262626] hover:bg-[#333] border border-[#444] text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">speed</span>
+                <span>Snapdragon Benchmark</span>
+              </button>
+            )}
             <button
               onClick={handleTriggerReset}
-              className="bg-[#abd600] hover:bg-[#c3f400] text-black font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+              className="bg-[#1f1f1f] hover:bg-[#282828] border border-[#383838] text-[#c4c9ac] hover:text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
             >
               <span className="material-symbols-outlined text-[18px]">replay</span>
-              <span>Reset to 3 Golden Demo Cases</span>
+              <span>Reset Demo State</span>
             </button>
             {resetSuccess && (
               <span className="text-xs font-mono-data text-[#abd600] flex items-center gap-1">

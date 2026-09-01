@@ -29,4 +29,5 @@ export interface NetworkGraphData {
   cryptoOffRamps?: string[];
   sharedDeviceFingerprint?: string;
   summary?: string;
+  topologySource?: 'SEEDED DEMO TOPOLOGY' | 'REAL LOCAL DATA';
 }

@@ -19,7 +19,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   return (
     <nav
       id="bottom-nav-bar"
-      className="bg-[#0e0e0e] fixed bottom-0 w-full z-50 h-20 border-t border-[#444933]/40 flex justify-around items-center px-2 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.5)]"
+      className="bg-[#0e0e0e] fixed bottom-0 w-full z-50 h-[calc(4.75rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] border-t border-[#444933]/40 flex justify-around items-center px-2 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.5)]"
     >
       {/* Home */}
       {isHome ? (
