@@ -1,0 +1,18 @@
+{
+  "model_name": "MobileBERT-Context-Classifier",
+  "parameters": "10,424,776",
+  "architecture": "MobileBERT-Bottleneck (4-layer, 512-hidden, 128-bottleneck)",
+  "quantization_target": "INT8",
+  "classes": [
+    "legitimate",
+    "payment_request",
+    "urgency",
+    "payment_pressure",
+    "authority_impersonation",
+    "phishing",
+    "social_engineering",
+    "fraud"
+  ],
+  "random_seed": 42,
+  "dataset_version": "multilabel_scam_corpus_v1.0"
+}

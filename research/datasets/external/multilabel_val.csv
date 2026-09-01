@@ -1,0 +1,103 @@
+id,text,threat_category,legitimate,payment_request,urgency,payment_pressure,authority_impersonation,phishing,social_engineering,fraud
+ml-ctx-0265,"Dear customer, your parcel #928154446 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-485 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0512,HDFC Bank Alert: Your debit card & UPI access suspended. Complete mandatory KYC verification within 24 hours to avoid penalty: https://bit.ly/sbi-kyc-426,bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0562,DISCOM ALERT: Final notice for meter disconnection. Pay processing charge ₹50 immediately to prevent legal FIR and fine. UPI: abc123@upi,utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0198,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-236",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0054,"Hi Rohit, sharing the consulting invoice for ₹18500. Please process transfer by end of this week.",organic_p2p,1,1,0,0,0,0,0,0
+ml-ctx-0398,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-689",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0085,Your Swiggy order #8921 has been placed successfully for ₹4500. Delivery partner will arrive in 25 mins.,merchant_promo,1,1,0,0,0,0,0,0
+ml-ctx-0364,"Dear Customer, ₹850 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹89566. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0354,"Your Uber ride OTP is 480342. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0131,"Dear Customer, ₹18500 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹95138. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0552,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25000 on UPI mule_781@axis to avoid cut. Call officer at 9846401976.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0299,"Congratulations! Your SIM number won ₹25,00,000 cash prize in KBC Lottery 2026. To claim lottery amount, deposit registration tax ₹25000 to manager UPI abc123@upi now.",lottery_kbc,0,1,1,0,1,0,1,1
+ml-ctx-0334,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹2500 to coordinator UPI layer1_mule@icici.,job_scam,0,1,0,0,1,0,1,1
+ml-ctx-0189,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-971",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0433,"Dear Customer, ₹4500 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹92011. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0618,HDFC Bank Alert: Your debit card & UPI access suspended. Complete mandatory KYC verification within 24 hours to avoid penalty: https://bit.ly/sbi-kyc-934,bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0679,"Dear Customer, ₹18500 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹126753. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0631,"Dear Customer, ₹1200 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹68876. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0409,"Dear Customer, ₹18500 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹84883. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0196,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹2500 to coordinator UPI refund.desk@paytm.,job_scam,0,1,0,0,1,0,1,1
+ml-ctx-0455,"Your Uber ride OTP is 125703. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0568,"Dear Customer, ₹150 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹19840. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0303,"Customer Support: To resolve your pending UPI refund of ₹10, download our official QuickSupport tool https://tinyurl.com/quicksupport-v6.apk and share code. TeamViewer/AnyDesk.",apk_screen_share,0,1,0,0,1,1,1,1
+ml-ctx-0550,"Dear SBI UPI User, payment of ₹350 to bescom@sbi successful. UPI Ref: 492819361464. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0535,"Dear SBI UPI User, payment of ₹1200 to amazon@apl successful. UPI Ref: 492819110013. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0541,"Customer Support: To resolve your pending UPI refund of ₹2500, download our official QuickSupport tool https://tinyurl.com/quicksupport-v1.apk and share code. TeamViewer/AnyDesk.",apk_screen_share,0,1,0,0,1,1,1,1
+ml-ctx-0177,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹10 on UPI layer1_mule@icici to avoid cut. Call officer at 9889080339.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0116,Recharge of ₹1200 successful for Jio number ending 9821. Data: 2GB/day for 28 days.,telecom_recharge,1,1,0,0,0,0,0,0
+ml-ctx-0481,"Dear SBI UPI User, payment of ₹150 to swiggy@icici successful. UPI Ref: 492819635987. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0342,"Dear Customer, ₹4500 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹57779. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0469,"Dear customer, your parcel #928143849 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-691 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0672,"Your Uber ride OTP is 585126. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0038,"Dear SBI UPI User, payment of ₹4500 to amazon@apl successful. UPI Ref: 492819160941. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0228,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-679",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0537,"Your Uber ride OTP is 219130. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0233,"Dear customer, your parcel #928111240 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-150 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0571,"Congratulations! Your SIM number won ₹25,00,000 cash prize in KBC Lottery 2026. To claim lottery amount, deposit registration tax ₹499 to manager UPI refund.desk@paytm now.",lottery_kbc,0,1,1,0,1,0,1,1
+ml-ctx-0001,"Dear customer, your parcel #928117241 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-802 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0293,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹2500 on UPI refund.desk@paytm to avoid cut. Call officer at 9889797909.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0089,"Congratulations! Your SIM number won ₹25,00,000 cash prize in KBC Lottery 2026. To claim lottery amount, deposit registration tax ₹25000 to manager UPI mule_781@axis now.",lottery_kbc,0,1,1,0,1,0,1,1
+ml-ctx-0044,"Dear customer, your parcel #928176839 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-227 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0347,"Hello sir, we noticed an accidental overcharge of ₹100 on your recent utility bill. Kindly authorize the refund voucher on https://bit.ly/sbi-kyc-764 to claim back to your account.",subtle_refund_scam,0,1,0,0,1,1,1,1
+ml-ctx-0165,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25000 on UPI kbc.tax@ybl to avoid cut. Call officer at 9813225980.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0319,"Hello sir, we noticed an accidental overcharge of ₹50 on your recent utility bill. Kindly authorize the refund voucher on https://bit.ly/sbi-kyc-877 to claim back to your account.",subtle_refund_scam,0,1,0,0,1,1,1,1
+ml-ctx-0065,"Hey, sent you ₹4500 for yesterday's dinner. Please check your GPay. Let me know once received.",organic_p2p,1,1,0,0,0,0,0,0
+ml-ctx-0007,"Electricity bill for Consumer No 192839 generated. Amount: ₹150, Due Date: 15-Sep. Pay via official portal or BESCOM app.",utility_official,1,1,0,0,1,0,0,0
+ml-ctx-0236,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-189 ya UPI customs.fine@okhdfc pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0060,"Dear Customer, ₹350 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹73200. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0578,"Dear Customer, ₹850 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹115484. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0580,"Dear Customer, ₹150 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹40613. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0284,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹10 to coordinator UPI disconnection.officer@sbi.,job_scam,0,1,0,1,1,0,1,1
+ml-ctx-0615,HDFC Bank Alert: Your debit card & UPI access suspended. Complete mandatory KYC verification within 24 hours to avoid penalty: https://bit.ly/sbi-kyc-337,bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0244,"Dear Customer, ₹350 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹82023. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0350,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-642",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0598,"Dear customer, your parcel #928192471 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-433 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0655,"Your Uber ride OTP is 358666. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0415,"Your Uber ride OTP is 643707. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0078,"Congratulations! Your SIM number won ₹25,00,000 cash prize in KBC Lottery 2026. To claim lottery amount, deposit registration tax ₹25000 to manager UPI layer1_mule@icici now.",lottery_kbc,0,1,1,0,1,0,1,1
+ml-ctx-0186,"Dear SBI UPI User, payment of ₹850 to amazon@apl successful. UPI Ref: 492819338723. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0468,"Dear SBI UPI User, payment of ₹4500 to bescom@sbi successful. UPI Ref: 492819791808. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0681,"Dear Customer, ₹4500 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹18678. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0629,"Dear SBI UPI User, payment of ₹150 to zomato@hdfcbank successful. UPI Ref: 492819784751. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0601,"Dear SBI UPI User, payment of ₹1200 to swiggy@icici successful. UPI Ref: 492819226957. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0093,Your Swiggy order #8921 has been placed successfully for ₹350. Delivery partner will arrive in 25 mins.,merchant_promo,1,1,0,0,0,0,0,0
+ml-ctx-0637,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹1500 to coordinator UPI mule_781@axis.,job_scam,0,1,0,0,1,0,1,1
+ml-ctx-0490,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹100 on UPI refund.desk@paytm to avoid cut. Call officer at 9893262564.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0230,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25000 on UPI abc123@upi to avoid cut. Call officer at 9830904348.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0407,"Your Uber ride OTP is 552790. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0232,"Dear Customer, ₹18500 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹146894. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0588,"Dear SBI UPI User, payment of ₹18500 to amazon@apl successful. UPI Ref: 492819331107. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0291,"Dear Customer, ₹350 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹109795. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0208,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25 on UPI abc123@upi to avoid cut. Call officer at 9824389631.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0294,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹499 to coordinator UPI abc123@upi.,job_scam,0,1,0,0,1,0,1,1
+ml-ctx-0330,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹100 on UPI customs.fine@okhdfc to avoid cut. Call officer at 9832651348.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0281,HDFC Bank Alert: Your debit card & UPI access suspended. Complete mandatory KYC verification within 24 hours to avoid penalty: https://bit.ly/sbi-kyc-792,bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0239,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25 on UPI layer1_mule@icici to avoid cut. Call officer at 9812158074.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0638,"Dear Customer, ₹350 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹21186. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0356,"Dear Customer, ₹1200 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹50232. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0499,"Dear customer, your parcel #928150932 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-137 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0327,"Your Uber ride OTP is 911816. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0353,"Your Uber ride OTP is 550021. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0206,HDFC Bank Alert: Your debit card & UPI access suspended. Complete mandatory KYC verification within 24 hours to avoid penalty: https://bit.ly/sbi-kyc-162,bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0053,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-599 ya UPI refund.desk@paytm pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0484,Greetings from HR. Your application for remote data consultant is approved. Please transfer refundable seat reservation fee ₹100 to coordinator UPI abc123@upi.,job_scam,0,1,0,0,1,0,1,1
+ml-ctx-0485,"Customer Support: To resolve your pending UPI refund of ₹100, download our official QuickSupport tool https://tinyurl.com/quicksupport-v7.apk and share code. TeamViewer/AnyDesk.",apk_screen_share,0,1,0,0,1,1,1,1
+ml-ctx-0551,"Your Uber ride OTP is 937874. Do not share this OTP with anyone, including the driver.",otp_service,1,0,0,0,0,0,0,0
+ml-ctx-0371,"Dear SBI UPI User, payment of ₹850 to zomato@hdfcbank successful. UPI Ref: 492819221644. - SBI",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0341,"Dear customer, your parcel #928141966 is held at distribution hub due to address verification. Please update address details at https://bit.ly/sbi-kyc-777 and confirm with ₹10 test transfer.",courier_customs,0,1,0,0,1,1,1,1
+ml-ctx-0352,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-720 ya UPI customs.fine@okhdfc pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0180,"Dear SBI User, your YONO Netbanking account is blocked today due to pending PAN Aadhaar KYC. Update immediately to prevent permanent deactivation: https://bit.ly/sbi-kyc-401",bank_kyc,0,1,1,1,1,1,1,1
+ml-ctx-0154,"Dear Customer, ₹1200 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹52440. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0509,"Dear Customer, ₹350 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹59069. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0025,"Dear Customer, ₹4500 debited from your A/c ending 8812 at Apollo Hospitals. Available Balance: ₹34221. - Axis Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0596,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-954 ya UPI layer1_mule@icici pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0464,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-585 ya UPI kbc.tax@ybl pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0224,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-427 ya UPI layer1_mule@icici pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0542,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-781 ya UPI refund.desk@paytm pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0219,DISCOM ALERT: Final notice for meter disconnection. Pay processing charge ₹2500 immediately to prevent legal FIR and fine. UPI: disconnection.officer@sbi,utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0430,Urgent: Bijli supply kat hoga aaj raat 10 baje. Bill baki hai. Turant payment kare link pe https://bit.ly/sbi-kyc-341 ya UPI abc123@upi pe bhejo. Electricity dept.,utility_disconnection,0,1,1,1,1,1,1,1
+ml-ctx-0520,"Dear Customer, ₹1200 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹131933. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0
+ml-ctx-0220,"Dear Customer, Your electricity power will be disconnected tonight at 9.30 PM from electricity office because your previous month bill was not updated. Please immediately pay ₹25000 on UPI layer1_mule@icici to avoid cut. Call officer at 9864106023.",utility_disconnection,0,1,1,1,1,0,1,1
+ml-ctx-0269,"Dear Customer, ₹18500 debited from your A/c ending 4921 on 28-Aug-2026 at Amazon Retail. Balance: ₹47003. - HDFC Bank",bank_alert,1,1,0,0,1,0,0,0

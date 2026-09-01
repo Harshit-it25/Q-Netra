@@ -1,0 +1,34 @@
+[
+  {
+    "id": "chk-golden-c",
+    "recipient": "abc123@upi",
+    "amount": 10,
+    "note": "Pay ₹10 immediately to prevent electricity disconnection tonight.",
+    "is_demo_fixture": true,
+    "quarantine_rule": "NEVER_USE_FOR_TRAIN_OR_TEST"
+  },
+  {
+    "id": "chk-golden-b",
+    "recipient": "priya.consulting@okhdfcbank",
+    "amount": 4500,
+    "note": "Advance consulting payment for client strategy engagement.",
+    "is_demo_fixture": true,
+    "quarantine_rule": "NEVER_USE_FOR_TRAIN_OR_TEST"
+  },
+  {
+    "id": "chk-golden-a",
+    "recipient": "swiggy@icici",
+    "amount": 850,
+    "note": "Swiggy Food Order payment #92811",
+    "is_demo_fixture": true,
+    "quarantine_rule": "NEVER_USE_FOR_TRAIN_OR_TEST"
+  },
+  {
+    "id": "chk-golden-d",
+    "recipient": "refund.desk99@okaxis",
+    "amount": 50,
+    "note": "UPI Refund processing fee for delayed order cancellation.",
+    "is_demo_fixture": true,
+    "quarantine_rule": "NEVER_USE_FOR_TRAIN_OR_TEST"
+  }
+]
