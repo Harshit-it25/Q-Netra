@@ -1,7 +1,8 @@
-{
   "name": "q-netra-ai",
   "private": true,
   "version": "1.0.0",
+  "description": "On-Device Neural Pre-Payment Fraud Interception & Multilingual Voice Shield for UPI",
+  "author": "Harshit Ranbhare",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

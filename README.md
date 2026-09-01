@@ -2,6 +2,7 @@
 
 # 🛡️ Q-NETRA AI (क्यू-नेत्र)
 ### **On-Device Neural Pre-Payment Fraud Interception & Multilingual Voice Shield for UPI**
+##### *Created & Developed by [Harshit Ranbhare](https://github.com/Harshit-it25)*
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -320,5 +321,5 @@ Distributed under the **Apache 2.0 License**. See `LICENSE` for more information
 ---
 
 <div align="center">
-Built with ❤️ for a safer Indian Digital Payments Ecosystem.
+Built with ❤️ by <strong><a href="https://github.com/Harshit-it25">Harshit Ranbhare</a></strong> for a safer Indian Digital Payments Ecosystem.
 </div>
